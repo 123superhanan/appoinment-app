@@ -11,17 +11,72 @@ const Appointment = () => {
 
 
   const [docInfo, setDocInfo] = useState(null);
+  const[docSlot, setDocSlot] = useState([]);
+  const[docSlotIndex, setDocSlotIndex] = useState(0);
+  const[SlotTime, setSlotTime] = useState('');
+
+
+
 
   const fetchDocInfo = async  () => {
     const docInfo = doctors.find( doc => doc._id === docId ) 
     setDocInfo(docInfo);
-    console.log(docInfo);
+    
     
   }
- 
+
+  const getAvailableSlot = async () => {
+    setDocSlot([]);
+  
+    // Getting current slot
+    let today = new Date();
+  
+    for (let i = 0; i < 7; i++) {
+      // Getting date & time
+      let currentDate = new Date(today);
+      currentDate.setDate(currentDate.getDate() + i);
+  
+      // Set time for appointments
+      let endTime = new Date(currentDate);
+      endTime.setHours(21, 0, 0, 0);
+  
+      // Setting hours (consider time zone and desired starting hour)
+      if (today.getDate() === currentDate.getDate()) {
+        // Adjust the starting hour based on time zone or user preferences
+        currentDate.setHours(10); // Example: Start at 10 AM
+      } else {
+        currentDate.setHours(30);
+      }
+      currentDate.setMinutes(0);
+  
+      let timeSlots = [];
+  
+      while (currentDate < endTime) {
+        let formattedTime = currentDate.toLocaleTimeString([], { hours: "2-digits", minutes: "2-digits" });
+  
+        timeSlots.push({
+          dateTime: new Date(currentDate),
+          time: formattedTime
+        });
+  
+        // Increment by 30 minutes
+        currentDate.setMinutes(currentDate.getMinutes() + 30);
+      }
+  
+      setSlotTime(prev => ([...prev, timeSlots]));
+    }
+  };
   useEffect(() => {
     fetchDocInfo()
   }, [doctors, docId])
+
+  useEffect(() => {
+    getAvailableSlot()
+  }, [docInfo])
+
+  useEffect(() => {
+console.log(docSlot)
+  },[docSlot])
 
   return docInfo && (
 
