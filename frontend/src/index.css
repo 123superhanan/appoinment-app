@@ -13,6 +13,9 @@
 .active hr{
     @apply block
 }
+::-webkit-scrollbar-thumb{
+    background: #fff;
+}
 ::-webkit-scrollbar{
-    @apply hidden
+    background: #fff;
 }
