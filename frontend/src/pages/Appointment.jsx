@@ -2,13 +2,14 @@ import React, { useEffect, useState,  useContext } from 'react';
 import { useParams } from 'react-router-dom'
 import { AppContext } from '../context/AppContext';
 import { assets } from '../assets/assets_frontend/assets';
+import RelatedComp from '../components/RelatedComp';
 
 const Appointment = () => {
 
 
   const {docId} = useParams();
   const {doctors, currencySymbol} = useContext(AppContext);
-  const daysOfWeek = ["", 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  const daysOfWeek = [ 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
   const [docInfo, setDocInfo] = useState(null);
   const[docSlot, setDocSlot] = useState([]);
@@ -107,9 +108,6 @@ console.log(docSlot)
 
 
 
-
-
-
         {/* --------- booking slots --------*/ }
     <div className='sm:ml-72 sm:pl-4 font-medium text-gray-700'>
           <p>Booking Slots</p>
@@ -135,8 +133,9 @@ console.log(docSlot)
           ))
         }
           </div>
+          <button className='bg-primary text-gray-200 text-sm font-light py-3 px-14 my-6 rounded-full hover:bg-white hover:text-black hover:border border-gray-900 transition-all 0.5s'>Book an Appoinment</button>
         </div>
-       
+       <RelatedComp/>
       </div>
     </>
 
