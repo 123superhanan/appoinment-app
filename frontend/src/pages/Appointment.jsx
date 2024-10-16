@@ -133,9 +133,9 @@ console.log(docSlot)
           ))
         }
           </div>
-          <button className='bg-primary text-gray-200 text-sm font-light py-3 px-14 my-6 rounded-full hover:bg-white hover:text-black hover:border border-gray-900 transition-all 0.5s'>Book an Appoinment</button>
+          <button className='bg-primary text-white text-sm font-light py-3 px-14 my-6 rounded-full hover:bg-white hover:text-black hover:border border-gray-400 transition-all 0.5s'>Book an Appoinment</button>
         </div>
-       <RelatedComp/>
+       <RelatedComp docId={docId} speciality={docInfo.speciality}/>
       </div>
     </>
 
