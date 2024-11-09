@@ -44,7 +44,7 @@ const MyProfile = () => {
    <p>
     <input className='bg-gray-50 ' value={userData.address.line1} onChange={e => setUserData (prev => ({...prev,address:{ ...prev,address, line1:e.target.value}}))} type="text" />
     <br/>
-    <input  className='bg-gray-50 ' value={userData.address.line2} onChange={e => setUserData (prev => ({...prev,address:{ ...prev,address,  line1:e.target.value}}))} type="text" />
+    <input  className='bg-gray-50 ' value={userData.address.line2} onChange={e => setUserData (prev => ({...prev,address:{ ...prev,address,  line2:e.target.value}}))} type="text" />
    </p>
    :
    <p className='bg-gray-200'>
