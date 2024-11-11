@@ -34,7 +34,7 @@ const Doctors = () => {
     <div>
       <p className='text-gray-600'>Browse  through the doctor specialist</p>
       <div className='flex flex-col sm:flex-row gap-5 items-start mt-5'>
-        <button>Filters</button>
+       
         <div className=' flex flex-col gap-4 text-sm text-gray-600'>
 
          {/*  functionality for specific speciality */}
