@@ -57,7 +57,32 @@ const Navabar = () => {
             </div> :
             <button onClick={() => navigate('/login')} className='bg-primary text-white px-8 py-3 rounded-full font-light hiddeb md:block'>Create Account</button>
           }
-          
+          <img onClick={() => setShowMenu(true)} className='w-6 md:hidden' src={assets.menu_icon} alt="" />
+       {/*-------------- mobile menu --------------- */}
+       
+      
+       <div className={`${showMenu ? "fixed w-full" :'h-0 w-0'} md:hidden fixed top-0 left-0 right-0 bg-white shadow-md z-20 overflow-hidden transition-all`}>
+  <div className="flex justify-between p-4">
+    <img src={assets.logo} alt="" className="w-24" />
+   
+      <img  className="w-6 h-6" onClick={() => setShowMenu(false)}  src={assets.cross_icon} alt="" />
+    
+  </div>
+  <ul className="flex flex-col space-y-2 p-4">
+    <li className="hover:bg-gray-100 p-2 rounded-md">
+      <NavLink onClick={() => setShowMenu(false)} to="/">Home</NavLink>
+    </li>
+    <li className="hover:bg-gray-100 p-2 rounded-md">
+      <NavLink onClick={() => setShowMenu(false)} to="/doctors">All Doctors</NavLink>
+    </li>
+    <li className="hover:bg-gray-100 p-2 rounded-md">
+      <NavLink onClick={() => setShowMenu(false)} to="/about">About</NavLink>
+    </li>
+    <li className="hover:bg-gray-100 p-2 rounded-md">
+      <NavLink onClick={() => setShowMenu(false)} to="/contact">Contact</NavLink>
+    </li>
+  </ul>
+</div>
         </div>
 </div>   
     </>
