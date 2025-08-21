@@ -1,0 +1,225 @@
+//api doctor
+import doctorModel from "../models/doctorModel.js";
+//api for patient
+import userModel from "../models/userModel.js";
+import bcrypt from "bcrypt";
+
+// Create new doctor
+export const createDoctor = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      speciality,
+      degree,
+      experience,
+      about,
+      fees,
+      address,
+    } = req.body;
+
+    // Validation
+    if (!name || !email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Name, email and password are required" });
+    }
+
+    const existingDoctor = await doctorModel.findOne({ email });
+    if (existingDoctor) {
+      return res
+        .status(400)
+        .json({ message: "Doctor with this email already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const doctor = new doctorModel({
+      name,
+      email,
+      password: hashedPassword,
+      speciality,
+      degree,
+      experience,
+      about,
+      fees,
+      address,
+    });
+
+    await doctor.save();
+    res.status(201).json({ message: "Doctor created successfully", doctor });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get all doctors with search, filter, pagination
+export const getDoctors = async (req, res) => {
+  try {
+    const { name, email, speciality, page = 1, limit = 10 } = req.query;
+
+    // Build query
+    const query = { isDeleted: { $ne: true } }; // ignore soft-deleted
+    if (name) query.name = { $regex: name, $options: "i" };
+    if (email) query.email = { $regex: email, $options: "i" };
+    if (speciality) query.speciality = { $regex: speciality, $options: "i" };
+
+    const doctors = await doctorModel
+      .find(query)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await doctorModel.countDocuments(query);
+
+    res.status(200).json({
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit),
+      doctors,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get single doctor by ID
+export const getDoctorById = async (req, res) => {
+  try {
+    const doctor = await doctorModel.findById(req.params.id);
+    if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+    res.status(200).json(doctor);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update doctor
+export const updateDoctor = async (req, res) => {
+  try {
+    const updates = req.body;
+
+    if (updates.password) {
+      updates.password = await bcrypt.hash(updates.password, 10);
+    }
+
+    const doctor = await doctorModel.findByIdAndUpdate(req.params.id, updates, {
+      new: true,
+    });
+
+    if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+
+    res.status(200).json({ message: "Doctor updated", doctor });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Delete doctor
+export const deleteDoctor = async (req, res) => {
+  try {
+    const doctor = await doctorModel.findByIdAndDelete(req.params.id);
+    if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+    res.status(200).json({ message: "Doctor deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Toggle availability
+export const toggleAvailability = async (req, res) => {
+  try {
+    const doctor = await doctorModel.findById(req.params.id);
+    if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+
+    doctor.available = !doctor.available;
+    await doctor.save();
+
+    res
+      .status(200)
+      .json({ message: "Availability updated", available: doctor.available });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/** patient curd operations**/
+
+// -------------------- PATIENT CRUD --------------------
+
+// Get all patients
+export const getPatients = async (req, res) => {
+  try {
+    const { name, email, page = 1, limit = 10 } = req.query;
+
+    const query = { role: "patient", isDeleted: { $ne: true } };
+    if (name) query.name = { $regex: name, $options: "i" };
+    if (email) query.email = { $regex: email, $options: "i" };
+
+    const patients = await userModel
+      .find(query)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .select("-password");
+
+    const total = await userModel.countDocuments(query);
+
+    res.status(200).json({
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit),
+      patients,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get single patient by ID
+export const getPatientById = async (req, res) => {
+  try {
+    const patient = await userModel.findById(req.params.id).select("-password");
+    if (!patient || patient.role !== "patient") {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+    res.status(200).json(patient);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update patient
+export const updatePatient = async (req, res) => {
+  try {
+    const updates = req.body;
+
+    if (updates.password) {
+      updates.password = await bcrypt.hash(updates.password, 10);
+    }
+
+    const patient = await userModel
+      .findByIdAndUpdate(req.params.id, updates, { new: true })
+      .select("-password");
+
+    if (!patient || patient.role !== "patient") {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+
+    res.status(200).json({ message: "Patient updated", patient });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Delete patient
+export const deletePatient = async (req, res) => {
+  try {
+    const patient = await userModel.findByIdAndDelete(req.params.id);
+    if (!patient || patient.role !== "patient") {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+    res.status(200).json({ message: "Patient deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
