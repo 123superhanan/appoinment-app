@@ -1,12 +1,21 @@
 import React, { useState } from "react";
 import { assets } from "../assets/assets_frontend/assets";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext"; // 👈 import context
+import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth(); // 👈 get auth state
+  const { user, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
+  function handleLogout() {
+    logout();
+    toast.success("Logged out successfully!", {
+      position: "top-right",
+      autoClose: 2000,
+    });
+    navigate("/login"); // optional → redirect to login
+  }
 
   return (
     <div className="flex items-center justify-between text-sm py-4 mb-5 border-b border-b-gray-400">
@@ -15,11 +24,11 @@ const Navbar = () => {
         onClick={() => navigate("/")}
         className="w-44 cursor-pointer"
         src={assets.logo}
-        alt=""
+        alt="logo"
       />
 
-      {/* --- NavLinks for routing (hide for admin) --- */}
-      {user?.role !== "admin" && (
+      {/* --- NavLinks (hide for admin & doctor) --- */}
+      {user?.role !== "admin" && user?.role !== "doctor" && (
         <ul className="hidden md:flex items-center gap-5 font-medium">
           <NavLink to="/">
             <li className="py-1">Home</li>
@@ -40,8 +49,12 @@ const Navbar = () => {
       <div className="flex items-center justify-center gap-4">
         {user ? (
           <div className="flex items-center gap-2 cursor-pointer group relative">
-            <img className="w-8 rounded-full" src={assets.profile_pic} alt="" />
-            <img className="w-2.5" src={assets.dropdown_icon} alt="" />
+            <img
+              className="w-8 rounded-full"
+              src={assets.profile_pic}
+              alt="profile"
+            />
+            <img className="w-2.5" src={assets.dropdown_icon} alt="dropdown" />
 
             {/* dropdown */}
             <div className="absolute top-0 right-0 pt-14 text-base font-medium text-gray-400 z-20 hidden group-hover:block">
@@ -54,6 +67,21 @@ const Navbar = () => {
                     >
                       Admin Dashboard
                     </p>
+                  </>
+                ) : user.role === "doctor" ? (
+                  <>
+                    <p
+                      onClick={() => navigate("/doctor")}
+                      className="hover:text-black cursor-pointer"
+                    >
+                      Doctor Dashboard
+                    </p>
+                    {/* <p
+                      onClick={() => navigate("/doctor/patients")}
+                      className="hover:text-black cursor-pointer"
+                    >
+                      My Patients
+                    </p> */}
                   </>
                 ) : (
                   <>
@@ -72,7 +100,7 @@ const Navbar = () => {
                   </>
                 )}
                 <p
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="hover:text-black cursor-pointer text-red-500"
                 >
                   Logout
@@ -89,30 +117,30 @@ const Navbar = () => {
           </button>
         )}
 
-        {/* mobile menu toggle */}
-        {user?.role !== "admin" && (
+        {/* mobile menu toggle (only for normal users) */}
+        {user?.role !== "admin" && user?.role !== "doctor" && (
           <img
             onClick={() => setShowMenu(true)}
             className="w-6 md:hidden"
             src={assets.menu_icon}
-            alt=""
+            alt="menu"
           />
         )}
 
-        {/* mobile menu */}
-        {user?.role !== "admin" && (
+        {/* mobile menu (only for normal users) */}
+        {user?.role !== "admin" && user?.role !== "doctor" && (
           <div
             className={`${
               showMenu ? "fixed w-full" : "h-0 w-0"
             } md:hidden fixed top-0 left-0 right-0 bg-white shadow-md z-20 overflow-hidden transition-all`}
           >
             <div className="flex justify-between p-4">
-              <img src={assets.logo} alt="" className="w-24" />
+              <img src={assets.logo} alt="logo" className="w-24" />
               <img
                 className="w-6 h-6"
                 onClick={() => setShowMenu(false)}
                 src={assets.cross_icon}
-                alt=""
+                alt="close"
               />
             </div>
             <ul className="flex flex-col space-y-2 p-4">

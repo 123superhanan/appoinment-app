@@ -18,6 +18,18 @@ import Appointments from "./Admin/pages/Appointments";
 import AddDoctor from "./Admin/pages/AddDoctor";
 import DoctorList from "./Admin/pages/DoctorList";
 import PrivateRoute from "./Admin/components/PrivateRoute";
+
+//doctor imports
+import DoctorLayout from "./Doctor/pages/DoctorLayout";
+import DoctorDashboard from "./Doctor/pages/DoctorDashboard";
+import DocAppointments from "./Doctor/pages/DocAppointments";
+import Patients from "./Doctor/pages/Patients";
+import Profile from "./Doctor/pages/DocProfile";
+import DoctorRoute from "./Doctor/components/DoctorRoute";
+
+//toasify
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const App = () => {
   return (
     <>
@@ -48,7 +60,41 @@ const App = () => {
             <Route path="add-doctor" element={<AddDoctor />} />
             <Route path="appointments" element={<Appointments />} />
           </Route>
+
+          <Route
+            path="/doctor/*"
+            element={
+              <DoctorRoute>
+                <DoctorLayout />
+              </DoctorRoute>
+            }
+          >
+            <Route index element={<DoctorDashboard />} />
+            <Route path="appointments" element={<DocAppointments />} />
+            <Route path="patients" element={<Patients />} />
+            <Route path="profile" element={<Profile />} />
+          </Route>
         </Routes>
+        <ToastContainer
+          position="top-center"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="dark"
+          toastStyle={{
+            backgroundColor: "#000", // black background
+            color: "#fff", // white text
+            border: "none", // no border
+            borderRadius: "8px", // optional rounded look
+            padding: "12px 20px",
+          }}
+        />
+
         <Footer />
       </div>
     </>

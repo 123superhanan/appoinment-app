@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-
+import { toast } from "react-toastify";
 const Login = () => {
   const [state, setState] = useState("Sign Up");
   const [name, setName] = useState("");
@@ -14,21 +14,23 @@ const Login = () => {
 
   const onSubmitHandler = (event) => {
     event.preventDefault();
-    // fake auth
     login(role);
+
+    toast.success(`Logged in as ${role}`, {
+      icon: role === "doctor" ? "👨‍⚕️" : role === "admin" ? "👑" : "👤",
+    });
     if (role === "admin") {
       navigate("/admin");
+    } else if (role === "doctor") {
+      navigate("/doctor");
     } else {
       navigate("/");
     }
   };
 
   return (
-    <form
-      onSubmit={onSubmitHandler}
-      className="min-h-[80vh] flex items-center "
-    >
-      <div className="flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 rounded-xl text-zinc-600 text-sm shadow-lg ">
+    <form onSubmit={onSubmitHandler} className="min-h-[80vh] flex items-center">
+      <div className="flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 rounded-xl text-zinc-600 text-sm shadow-lg">
         <p className="text-xl font-semibold">
           {state === "Sign Up" ? "Create Account" : "LogIn"}
         </p>
@@ -97,6 +99,15 @@ const Login = () => {
                   onChange={(e) => setRole(e.target.value)}
                 />
                 Admin
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  value="doctor"
+                  checked={role === "doctor"}
+                  onChange={(e) => setRole(e.target.value)}
+                />
+                Doctor
               </label>
             </div>
           </div>
