@@ -46,6 +46,10 @@ const userSchema = new mongoose.Schema(
       enum: ["patient", "admin"],
       default: "patient",
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

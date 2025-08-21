@@ -56,6 +56,11 @@ const doctorSchema = new mongoose.Schema(
       type: Object,
       default: [],
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    role: { type: String, default: "doctor" },
   },
   { timestamps: true },
   { minimize: false } // to prevent mongoose from removing empty objects

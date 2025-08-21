@@ -6,6 +6,7 @@ import {
   updateDoctor,
   deleteDoctor,
   toggleAvailability,
+  hardDeleteDoctor,
 } from "../controllers/adminController.js";
 import {
   authMiddleware,
@@ -18,6 +19,7 @@ import {
   getPatientById,
   updatePatient,
   deletePatient,
+  hardDeletePatient,
 } from "../controllers/adminController.js";
 // Protect all admin routes
 adminRouter.use(authMiddleware, authorizeRoles("admin"));
@@ -35,4 +37,18 @@ adminRouter.get("/patients", getPatients);
 adminRouter.get("/patients/:id", getPatientById);
 adminRouter.put("/patients/:id", updatePatient);
 adminRouter.delete("/patients/:id", deletePatient);
+
+//hard delete routes
+adminRouter.delete(
+  "/doctors/:id/permanent",
+  authMiddleware,
+  authorizeRoles("superadmin"),
+  hardDeleteDoctor
+);
+adminRouter.delete(
+  "/patients/:id/permanent",
+  authMiddleware,
+  authorizeRoles("superadmin"),
+  hardDeletePatient
+);
 export default adminRouter;

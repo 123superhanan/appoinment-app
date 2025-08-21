@@ -5,6 +5,7 @@ import connectDB from "./config/db.js";
 import connectCloudinary from "./config/cloudinary.js";
 import adminRouter from "./routes/adminRouter.js";
 import doctorRouter from "./routes/doctorRouter.js";
+import authRouter from "./routes/authRoutes.js";
 //app config
 const app = express();
 const port = process.env.PORT || 4000;
@@ -18,6 +19,7 @@ connectCloudinary();
 //api endpoints
 app.use("/api/admin", adminRouter);
 app.use("/api/doctors", doctorRouter);
+app.use("/api/auth", authRouter);
 app.get("/", (req, res) => {
   res.status(200).send("Welcome to the Prescripto backend server");
 });

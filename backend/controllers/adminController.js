@@ -116,15 +116,22 @@ export const updateDoctor = async (req, res) => {
 };
 
 // Delete doctor
+// Soft delete doctor
 export const deleteDoctor = async (req, res) => {
   try {
-    const doctor = await doctorModel.findByIdAndDelete(req.params.id);
+    const doctor = await doctorModel.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: true },
+      { new: true }
+    );
     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
-    res.status(200).json({ message: "Doctor deleted" });
+    res.status(200).json({ message: "Doctor soft-deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Soft delete patient
 
 // Toggle availability
 export const toggleAvailability = async (req, res) => {
@@ -142,7 +149,15 @@ export const toggleAvailability = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
+export const hardDeleteDoctor = async (req, res) => {
+  try {
+    const doctor = await doctorModel.findByIdAndDelete(req.params.id);
+    if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+    res.status(200).json({ message: "Doctor permanently deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 /** patient curd operations**/
 
 // -------------------- PATIENT CRUD --------------------
@@ -214,11 +229,23 @@ export const updatePatient = async (req, res) => {
 // Delete patient
 export const deletePatient = async (req, res) => {
   try {
+    const patient = await userModel.findByIdAndUpdate(
+      req.params.id,
+      { isDeleted: true },
+      { new: true }
+    );
+    if (!patient) return res.status(404).json({ message: "Patient not found" });
+    res.status(200).json({ message: "Patient soft-deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const hardDeletePatient = async (req, res) => {
+  try {
     const patient = await userModel.findByIdAndDelete(req.params.id);
-    if (!patient || patient.role !== "patient") {
-      return res.status(404).json({ message: "Patient not found" });
-    }
-    res.status(200).json({ message: "Patient deleted" });
+    if (!patient) return res.status(404).json({ message: "Patient not found" });
+    res.status(200).json({ message: "Patient permanently deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
