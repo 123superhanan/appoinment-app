@@ -1,3 +1,4 @@
+// routes/authRoutes.js - Your current code is correct
 import express from "express";
 import {
   userLogin,

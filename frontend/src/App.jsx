@@ -18,6 +18,8 @@ import Appointments from "./Admin/pages/Appointments";
 import AddDoctor from "./Admin/pages/AddDoctor";
 import DoctorList from "./Admin/pages/DoctorList";
 import PrivateRoute from "./Admin/components/PrivateRoute";
+import AdminLogin from "./Admin/pages/AdminLogin";
+import AdminLoader from "./Admin/components/AdminLoader";
 
 //doctor imports
 import DoctorLayout from "./Doctor/pages/DoctorLayout";
@@ -49,6 +51,8 @@ const App = () => {
           <Route path="/my-profile" element={<MyProfile />} />
           <Route path="doctor-login" element={<DoctorLogin />} />
           <Route path="doctor-signup" element={<DoctorSignup />} />
+          <Route path="/admin-login" element={<AdminLogin />} />
+
           {/* --- Admin --- */}
           <Route
             path="/admin/*"

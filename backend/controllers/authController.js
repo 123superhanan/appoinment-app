@@ -10,18 +10,31 @@ const generateToken = (user) =>
   });
 
 // ------------------- Admin/Patient Login -------------------
+// controllers/authController.js - Updated userLogin with detailed logging
 export const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Check if user exists
     const user = await userModel.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (!user) {
+      console.log("User not found for email:", email);
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check password
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(401).json({ message: "Invalid credentials" });
 
+    if (!isMatch) {
+      console.log("Password mismatch for email:", email);
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Generate token
     const token = generateToken(user);
+
     res.status(200).json({
       token,
       user: {
@@ -29,13 +42,14 @@ export const userLogin = async (req, res) => {
         name: user.name,
         role: user.role,
         email: user.email,
+        gender: user.gender,
       },
     });
   } catch (error) {
+    console.error("User login error:", error);
     res.status(500).json({ message: error.message });
   }
 };
-
 // ------------------- Doctor Login -------------------
 
 export const doctorLogin = async (req, res) => {

@@ -7,21 +7,21 @@ import {
   deleteDoctor,
   toggleAvailability,
   hardDeleteDoctor,
-} from "../controllers/adminController.js";
-import {
-  authMiddleware,
-  authorizeRoles,
-} from "../middlewares/authMiddleware.js";
-const adminRouter = express.Router();
-// pateints routes
-import {
   getPatients,
   getPatientById,
   updatePatient,
   deletePatient,
   hardDeletePatient,
 } from "../controllers/adminController.js";
-// Protect all admin routes
+
+import {
+  authMiddleware,
+  authorizeRoles,
+} from "../middlewares/authMiddleware.js";
+
+const adminRouter = express.Router();
+
+// Protect all routes below
 adminRouter.use(authMiddleware, authorizeRoles("admin"));
 
 // Doctor routes
@@ -38,17 +38,16 @@ adminRouter.get("/patients/:id", getPatientById);
 adminRouter.put("/patients/:id", updatePatient);
 adminRouter.delete("/patients/:id", deletePatient);
 
-//hard delete routes
+// Hard delete routes (superadmin only)
 adminRouter.delete(
   "/doctors/:id/permanent",
-  authMiddleware,
   authorizeRoles("superadmin"),
   hardDeleteDoctor
 );
 adminRouter.delete(
   "/patients/:id/permanent",
-  authMiddleware,
   authorizeRoles("superadmin"),
   hardDeletePatient
 );
+
 export default adminRouter;

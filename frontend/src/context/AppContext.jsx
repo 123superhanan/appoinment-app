@@ -1,27 +1,17 @@
 import { createContext } from "react";
 import { doctors } from "../assets/assets_frontend/assets";
-
+import axios from "../utils/axios";
 export const AppContext = createContext();
 
 const AppContextProvider = ({ children }) => {
+  const currencySymbol = "$";
 
-const currencySymbol = "$"
-
-
-
-
-
-    
   const value = {
     doctors,
-    currencySymbol
+    currencySymbol,
   };
 
-  return (
-    <AppContext.Provider value={value}>
-      {children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
 
 export default AppContextProvider;

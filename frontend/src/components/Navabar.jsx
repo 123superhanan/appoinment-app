@@ -1,25 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { assets } from "../assets/assets_frontend/assets";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { AdminAuthContext } from "../context/AdminAuthContext";
 import { toast } from "react-toastify";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { admin, logoutAdmin } = useContext(AdminAuthContext);
   const [showMenu, setShowMenu] = useState(false);
-  function handleLogout() {
+
+  const handleUserLogout = () => {
     logout();
     toast.success("Logged out successfully!", {
       position: "top-right",
       autoClose: 2000,
     });
-    navigate("/login"); // optional → redirect to login
-  }
+    navigate("/login");
+  };
+
+  const handleAdminLogout = () => {
+    logoutAdmin();
+    toast.success("Admin logged out successfully!", {
+      position: "top-right",
+      autoClose: 2000,
+    });
+    navigate("/");
+  };
+
+  // Check if any user or admin is logged in
+  const isLoggedIn = user || admin;
+  const userRole = user?.role || admin?.role;
 
   return (
     <div className="flex items-center justify-between text-sm py-4 mb-5 border-b border-b-gray-400">
-      {/* --- logo --- */}
+      {/* Logo */}
       <img
         onClick={() => navigate("/")}
         className="w-44 cursor-pointer"
@@ -27,8 +43,8 @@ const Navbar = () => {
         alt="logo"
       />
 
-      {/* --- NavLinks (hide for admin & doctor) --- */}
-      {user?.role !== "admin" && user?.role !== "doctor" && (
+      {/* NavLinks for normal users */}
+      {userRole !== "admin" && userRole !== "doctor" && (
         <ul className="hidden md:flex items-center gap-5 font-medium">
           <NavLink to="/">
             <li className="py-1">Home</li>
@@ -45,80 +61,106 @@ const Navbar = () => {
         </ul>
       )}
 
-      {/* --- navbar right side --- */}
+      {/* Right-side buttons */}
       <div className="flex items-center justify-center gap-4">
-        {user ? (
-          <div className="flex items-center gap-2 cursor-pointer group relative">
-            <img
-              className="w-8 rounded-full"
-              src={assets.profile_pic}
-              alt="profile"
-            />
-            <img className="w-2.5" src={assets.dropdown_icon} alt="dropdown" />
+        {isLoggedIn ? (
+          <div className="flex items-center gap-4">
+            {/* Show admin logout button if admin is logged in */}
+            {admin && (
+              <button
+                onClick={handleAdminLogout}
+                className="bg-red-600 text-white px-4 py-2 rounded-full font-light"
+              >
+                Logout Admin
+              </button>
+            )}
 
-            {/* dropdown */}
-            <div className="absolute top-0 right-0 pt-14 text-base font-medium text-gray-400 z-20 hidden group-hover:block">
-              <div className="min-w-48 bg-stone-100 rounded flex flex-col gap-5 p-4">
-                {user.role === "admin" ? (
-                  <>
+            {/* Show user profile dropdown for regular users */}
+            {user && (
+              <div className="flex items-center gap-2 cursor-pointer group relative">
+                <img
+                  className="w-8 rounded-full"
+                  src={assets.profile_pic}
+                  alt="profile"
+                />
+                <img
+                  className="w-2.5"
+                  src={assets.dropdown_icon}
+                  alt="dropdown"
+                />
+
+                {/* Dropdown */}
+                <div className="absolute top-0 right-0 pt-14 text-base font-medium text-gray-400 z-20 hidden group-hover:block">
+                  <div className="min-w-48 bg-stone-100 rounded flex flex-col gap-5 p-4">
+                    {user.role === "admin" && (
+                      <p
+                        onClick={() => navigate("/admin")}
+                        className="hover:text-black cursor-pointer"
+                      >
+                        Admin Dashboard
+                      </p>
+                    )}
+                    {user.role === "doctor" && (
+                      <p
+                        onClick={() => navigate("/doctor")}
+                        className="hover:text-black cursor-pointer"
+                      >
+                        Doctor Dashboard
+                      </p>
+                    )}
+                    {user.role === "user" && (
+                      <>
+                        <p
+                          onClick={() => navigate("/my-profile")}
+                          className="hover:text-black cursor-pointer"
+                        >
+                          My Profile
+                        </p>
+                        <p
+                          onClick={() => navigate("/myAppointment")}
+                          className="hover:text-black cursor-pointer"
+                        >
+                          My Appointment
+                        </p>
+                      </>
+                    )}
                     <p
-                      onClick={() => navigate("/admin")}
-                      className="hover:text-black cursor-pointer"
+                      onClick={handleUserLogout}
+                      className="hover:text-black cursor-pointer text-red-500"
                     >
-                      Admin Dashboard
+                      Logout
                     </p>
-                  </>
-                ) : user.role === "doctor" ? (
-                  <>
-                    <p
-                      onClick={() => navigate("/doctor")}
-                      className="hover:text-black cursor-pointer"
-                    >
-                      Doctor Dashboard
-                    </p>
-                    {/* <p
-                      onClick={() => navigate("/doctor/patients")}
-                      className="hover:text-black cursor-pointer"
-                    >
-                      My Patients
-                    </p> */}
-                  </>
-                ) : (
-                  <>
-                    <p
-                      onClick={() => navigate("/my-profile")}
-                      className="hover:text-black cursor-pointer"
-                    >
-                      My Profile
-                    </p>
-                    <p
-                      onClick={() => navigate("/myAppointment")}
-                      className="hover:text-black cursor-pointer"
-                    >
-                      My Appointment
-                    </p>
-                  </>
-                )}
-                <p
-                  onClick={handleLogout}
-                  className="hover:text-black cursor-pointer text-red-500"
-                >
-                  Logout
-                </p>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         ) : (
-          <button
-            onClick={() => navigate("/login")}
-            className="bg-primary text-white px-8 py-3 rounded-full font-light hidden md:block"
-          >
-            Create Account
-          </button>
+          <>
+            {/* Normal user signup/login - always show unless admin is logged in */}
+            {!admin && (
+              <button
+                onClick={() => navigate("/login")}
+                className="bg-primary text-white px-8 py-3 rounded-full font-light hidden md:block"
+              >
+                Create Account
+              </button>
+            )}
+
+            {/* Admin login button - always show unless admin is already logged in */}
+            {!admin && (
+              <button
+                onClick={() => navigate("/admin-login")}
+                className="bg-gray-700 text-white px-4 py-2 rounded-full font-light hidden md:block ml-2"
+              >
+                Admin Login
+              </button>
+            )}
+          </>
         )}
 
-        {/* mobile menu toggle (only for normal users) */}
-        {user?.role !== "admin" && user?.role !== "doctor" && (
+        {/* Mobile menu toggle - hide if admin or doctor is logged in */}
+        {userRole !== "admin" && userRole !== "doctor" && (
           <img
             onClick={() => setShowMenu(true)}
             className="w-6 md:hidden"
@@ -127,8 +169,8 @@ const Navbar = () => {
           />
         )}
 
-        {/* mobile menu (only for normal users) */}
-        {user?.role !== "admin" && user?.role !== "doctor" && (
+        {/* Mobile menu - hide if admin or doctor is logged in */}
+        {userRole !== "admin" && userRole !== "doctor" && (
           <div
             className={`${
               showMenu ? "fixed w-full" : "h-0 w-0"
@@ -164,6 +206,21 @@ const Navbar = () => {
                   Contact
                 </NavLink>
               </li>
+
+              {/* Mobile admin login button */}
+              {!admin && (
+                <li>
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      navigate("/admin-login");
+                    }}
+                    className="bg-gray-700 text-white px-4 py-2 rounded-full w-full text-center"
+                  >
+                    Admin Login
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
         )}
