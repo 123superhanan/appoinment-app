@@ -33,8 +33,8 @@ const userSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["Male", "Female", "Other"],
-      default: "not selected",
+      enum: ["male", "female", "other"],
+      required: false,
     },
     address: {
       line1: { type: String, default: "" },

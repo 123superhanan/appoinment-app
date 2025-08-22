@@ -1,6 +1,5 @@
 import express from "express";
 import {
-  doctorLogin,
   updateProfile,
   toggleAvailability,
 } from "../controllers/doctorController.js";
@@ -11,10 +10,7 @@ import {
 
 const doctorRouter = express.Router();
 
-// Doctor login (public)
-doctorRouter.post("/login", doctorLogin);
-
-// Update profile (only doctors themselves)
+// Doctor management routes (protected)
 doctorRouter.put(
   "/profile",
   authMiddleware,
@@ -22,7 +18,6 @@ doctorRouter.put(
   updateProfile
 );
 
-// Toggle availability (only doctors themselves)
 doctorRouter.patch(
   "/availability",
   authMiddleware,

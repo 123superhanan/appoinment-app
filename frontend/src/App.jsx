@@ -30,6 +30,8 @@ import DoctorRoute from "./Doctor/components/DoctorRoute";
 //toasify
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import DoctorSignup from "./Doctor/pages/DoctorSignup";
+import DoctorLogin from "./Doctor/pages/DoctorLogin";
 const App = () => {
   return (
     <>
@@ -45,7 +47,8 @@ const App = () => {
           <Route path="/appointment/:docId" element={<Appointment />} />
           <Route path="/about" element={<About />} />
           <Route path="/my-profile" element={<MyProfile />} />
-
+          <Route path="doctor-login" element={<DoctorLogin />} />
+          <Route path="doctor-signup" element={<DoctorSignup />} />
           {/* --- Admin --- */}
           <Route
             path="/admin/*"
