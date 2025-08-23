@@ -5,18 +5,23 @@ const doctorSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
-    image: { type: String }, // optional
+
+    image: { type: String, default: "" }, // Cloudinary URL (optional)
+
     speciality: { type: String, required: true },
-    degree: { type: String, required: true },
-    experience: { type: String, required: true },
-    about: { type: String, required: true },
-    fees: { type: Number, required: true },
+    degree: { type: String, required: false }, // optional
+    experience: { type: String, required: false }, // optional
+    about: { type: String, required: false }, // optional
+    fees: { type: Number, required: false }, // optional
+
     address: {
-      line1: { type: String, required: true },
-      line2: { type: String, required: true },
+      line1: { type: String, required: false },
+      line2: { type: String, required: false },
     },
+
     available: { type: Boolean, default: true },
-    slots_booked: { type: [Object], default: [] }, // make it array not plain object
+    slots_booked: { type: [Object], default: [] },
+
     isDeleted: { type: Boolean, default: false },
     role: { type: String, default: "doctor" },
   },
@@ -25,4 +30,5 @@ const doctorSchema = new mongoose.Schema(
 
 const doctorModel =
   mongoose.models.Doctor || mongoose.model("Doctor", doctorSchema);
+
 export default doctorModel;

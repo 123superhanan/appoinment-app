@@ -81,3 +81,5 @@ export const AdminAuthProvider = ({ children }) => {
     </AdminAuthContext.Provider>
   );
 };
+export const useAdminAuth = () => React.useContext(AdminAuthContext);
+export default AdminAuthContext;

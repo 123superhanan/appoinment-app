@@ -1,10 +1,13 @@
-//api doctor
 import doctorModel from "../models/doctorModel.js";
-//api for patient
 import userModel from "../models/userModel.js";
 import bcrypt from "bcrypt";
+import Appointment from "../models/appointmentModel.js";
 
-// Create new doctor
+// -------------------- DOCTOR CRUD --------------------
+
+// @desc Create new doctor
+// @route POST /api/admin/doctors
+// @access Admin
 export const createDoctor = async (req, res) => {
   try {
     const {
@@ -17,6 +20,9 @@ export const createDoctor = async (req, res) => {
       about,
       fees,
       address,
+      addressLine1,
+      addressLine2,
+      image,
     } = req.body;
 
     // Validation
@@ -33,7 +39,14 @@ export const createDoctor = async (req, res) => {
         .json({ message: "Doctor with this email already exists" });
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Address handling
+    const finalAddress =
+      address && address.line1 && address.line2
+        ? address
+        : { line1: addressLine1 || "", line2: addressLine2 || "" };
 
     const doctor = new doctorModel({
       name,
@@ -44,12 +57,14 @@ export const createDoctor = async (req, res) => {
       experience,
       about,
       fees,
-      address,
+      image, // Use the URL from the upload endpoint
+      address: finalAddress,
     });
 
     await doctor.save();
     res.status(201).json({ message: "Doctor created successfully", doctor });
   } catch (error) {
+    console.error("Error creating doctor:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -248,5 +263,58 @@ export const hardDeletePatient = async (req, res) => {
     res.status(200).json({ message: "Patient permanently deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// ================== GET ALL APPOINTMENTS ==================
+export const getAppointments = async (req, res) => {
+  try {
+    const appointments = await Appointment.find().sort({ createdAt: -1 });
+    res.status(200).json({ appointments });
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+    res.status(500).json({ message: "Failed to fetch appointments" });
+  }
+};
+
+// ================== CREATE NEW APPOINTMENT ==================
+export const createAppointment = async (req, res) => {
+  try {
+    const { patient, doctor, date, time, status } = req.body;
+
+    if (!patient || !doctor || !date || !time) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const newAppointment = new Appointment({
+      patient,
+      doctor,
+      date,
+      time,
+      status: status || "pending", // ✅ default handled here too
+    });
+
+    const saved = await newAppointment.save();
+    res.status(201).json(saved);
+  } catch (error) {
+    console.error("Error creating appointment:", error);
+    res.status(500).json({ message: "Failed to create appointment" });
+  }
+};
+
+// ================== DELETE APPOINTMENT ==================
+export const deleteAppointment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Appointment.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    res.status(200).json({ message: "Appointment deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting appointment:", error);
+    res.status(500).json({ message: "Failed to delete appointment" });
   }
 };

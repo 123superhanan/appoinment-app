@@ -12,28 +12,34 @@ import {
   updatePatient,
   deletePatient,
   hardDeletePatient,
+  getAppointments,
+  createAppointment,
+  deleteAppointment,
 } from "../controllers/adminController.js";
-
+import { uploadImage } from "../controllers/uploadController.js";
 import {
   authMiddleware,
   authorizeRoles,
 } from "../middlewares/authMiddleware.js";
 
 const adminRouter = express.Router();
+adminRouter.get("/doctors", getDoctors);
+adminRouter.get("/patients", getPatients);
 
+adminRouter.post("/upload", uploadImage);
 // Protect all routes below
 adminRouter.use(authMiddleware, authorizeRoles("admin"));
 
 // Doctor routes
 adminRouter.post("/doctors", createDoctor);
-adminRouter.get("/doctors", getDoctors);
+adminRouter.get("/appointment", getAppointments);
 adminRouter.get("/doctors/:id", getDoctorById);
 adminRouter.put("/doctors/:id", updateDoctor);
 adminRouter.delete("/doctors/:id", deleteDoctor);
 adminRouter.patch("/doctors/:id/availability", toggleAvailability);
 
 // Patient routes
-adminRouter.get("/patients", getPatients);
+
 adminRouter.get("/patients/:id", getPatientById);
 adminRouter.put("/patients/:id", updatePatient);
 adminRouter.delete("/patients/:id", deletePatient);
@@ -49,5 +55,9 @@ adminRouter.delete(
   authorizeRoles("superadmin"),
   hardDeletePatient
 );
+// Appointment routes
+
+adminRouter.post("/appointments", createAppointment);
+adminRouter.delete("/appointments/:id", deleteAppointment);
 
 export default adminRouter;

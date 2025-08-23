@@ -8,24 +8,24 @@ import {
   loginPatient,
   getPatientProfile,
   updatePatientProfile,
-} from "../controllers/patientController.js";
+} from "../controllers/PatientsController.js";
 
-const router = express.Router();
+const patRouter = express.Router();
 
-router.post("/signup", registerPatient);
-router.post("/login", loginPatient);
+patRouter.post("/signup", registerPatient);
+patRouter.post("/login", loginPatient);
 
-router.get(
+patRouter.get(
   "/profile",
   authMiddleware,
   authorizeRoles("patient"),
   getPatientProfile
 );
-router.put(
+patRouter.put(
   "/profile",
   authMiddleware,
   authorizeRoles("patient"),
   updatePatientProfile
 );
 
-export default router;
+export default patRouter;

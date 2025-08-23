@@ -1,54 +1,30 @@
-import React, { useState } from "react";
-
-// Sample doctors list (replace with real data or props)
-const doctors = [
-  {
-    _id: "1",
-    name: "Dr. Richard James",
-    speciality: "Cardiologist",
-    image: "/doctors/doc1.jpg",
-  },
-  {
-    _id: "2",
-    name: "Dr. Sarah Lee",
-    speciality: "Dermatologist",
-    image: "/doctors/doc2.jpg",
-  },
-];
-
-// Initial mock appointments
-const initialAppointments = [
-  {
-    id: 1,
-    doctorId: "1",
-    patient: "John Doe",
-    date: "2024-08-22",
-    time: "10:00 AM",
-  },
-  {
-    id: 2,
-    doctorId: "2",
-    patient: "Jane Smith",
-    date: "2024-08-23",
-    time: "2:00 PM",
-  },
-];
+import React, { useContext, useState } from "react";
+import { AppContext } from "../../context/AppContext.jsx";
 
 export default function Appointments() {
-  const [list, setList] = useState(initialAppointments);
+  const { appointments, fetchAppointments, addAppointment, deleteAppointment } =
+    useContext(AppContext);
   const [q, setQ] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [formData, setFormData] = useState({
+    doctor: "",
+    patient: "",
+    date: "",
+    time: "",
+  });
 
-  function doctorById(id) {
-    return doctors.find((d) => d._id === id);
-  }
-
-  function remove(id) {
-    setList((l) => l.filter((x) => x.id !== id));
-  }
-
-  const filtered = list.filter((a) =>
-    a.patient.toLowerCase().includes(q.toLowerCase())
+  // Search filter
+  const filtered = appointments.filter((a) =>
+    a.patientId?.name?.toLowerCase().includes(q.toLowerCase())
   );
+
+  // Handle form submit
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    addAppointment(formData); // context function
+    setShowModal(false);
+    setFormData({ doctorId: "", patientId: "", date: "", time: "" });
+  };
 
   return (
     <div className="space-y-4">
@@ -60,7 +36,10 @@ export default function Appointments() {
           placeholder="Search patient…"
           className="rounded-xl border border-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 w-full md:w-72"
         />
-        <button className="btn btn-solid bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700">
+        <button
+          onClick={() => setShowModal(true)}
+          className="btn btn-solid bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700"
+        >
           New Appointment
         </button>
       </div>
@@ -79,41 +58,22 @@ export default function Appointments() {
           </thead>
           <tbody>
             {filtered.length > 0 ? (
-              filtered.map((a) => {
-                const d = doctorById(a.doctorId);
-                return (
-                  <tr key={a.id} className="border-t">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={d?.image}
-                          alt={d?.name}
-                          className="w-9 h-9 rounded-full object-cover"
-                        />
-                        <div>
-                          <div className="text-gray-900 font-medium">
-                            {d?.name}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {d?.speciality}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">{a.patient}</td>
-                    <td className="px-4 py-3">{a.date}</td>
-                    <td className="px-4 py-3">{a.time}</td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => remove(a.id)}
-                        className="text-red-600 hover:underline"
-                      >
-                        Cancel
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
+              filtered.map((a) => (
+                <tr key={a._id} className="border-t">
+                  <td className="px-4 py-3">{a.doctorId?.name}</td>
+                  <td className="px-4 py-3">{a.patientId?.name}</td>
+                  <td className="px-4 py-3">{a.date}</td>
+                  <td className="px-4 py-3">{a.time}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => deleteAppointment(a._id)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Cancel
+                    </button>
+                  </td>
+                </tr>
+              ))
             ) : (
               <tr>
                 <td colSpan="5" className="text-center py-6 text-gray-500">
@@ -124,6 +84,88 @@ export default function Appointments() {
           </tbody>
         </table>
       </div>
+
+      {/* Modal for New Appointment */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">New Appointment</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Doctor ID"
+                value={formData.doctorId}
+                onChange={(e) =>
+                  setFormData({ ...formData, doctorId: e.target.value })
+                }
+                className="w-full border px-3 py-2 rounded-lg"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Patient ID"
+                value={formData.patientId}
+                onChange={(e) =>
+                  setFormData({ ...formData, patientId: e.target.value })
+                }
+                className="w-full border px-3 py-2 rounded-lg"
+                required
+              />
+              <input
+                type="date"
+                value={formData.date}
+                onChange={(e) =>
+                  setFormData({ ...formData, date: e.target.value })
+                }
+                className="w-full border px-3 py-2 rounded-lg"
+                required
+              />
+              <input
+                type="time"
+                value={formData.time}
+                onChange={(e) =>
+                  setFormData({ ...formData, time: e.target.value })
+                }
+                className="w-full border px-3 py-2 rounded-lg"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Doctor"
+                value={formData.doctor}
+                onChange={(e) =>
+                  setFormData({ ...formData, doctor: e.target.value })
+                }
+              />
+
+              <input
+                type="text"
+                placeholder="Patient"
+                value={formData.patient}
+                onChange={(e) =>
+                  setFormData({ ...formData, patient: e.target.value })
+                }
+              />
+
+              <div className="flex justify-end gap-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 rounded-lg border"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

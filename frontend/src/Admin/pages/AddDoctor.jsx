@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import DoctorForm from "../components/DoctorForm.jsx";
+import { AppContext } from "../../context/AppContext.jsx";
 
 export default function AddDoctor() {
+  const { addDoctor } = useContext(AppContext);
   const [saved, setSaved] = useState(null);
-  function handleSubmit(form) {
-    setSaved(form);
+
+  async function handleSubmit(form) {
+    const newDoc = await addDoctor(form); // API call
+    setSaved(newDoc);
   }
 
   return (
@@ -12,7 +16,7 @@ export default function AddDoctor() {
       <DoctorForm onSubmit={handleSubmit} />
       {saved && (
         <div className="card p-4 text-sm text-green-700 bg-green-50 border-green-200">
-          Doctor "{saved.name}" saved (mock). You can wire this to your API.
+          Doctor "{saved.name}" added successfully 🎉
         </div>
       )}
     </div>

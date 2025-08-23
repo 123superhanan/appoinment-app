@@ -6,6 +6,24 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
 
+  const handlePatientLogin = async (loginData) => {
+    try {
+      const response = await axios.post("/api/auth/login", loginData);
+      const { token, patient } = response.data;
+
+      // Store both token and patient data
+      localStorage.setItem("userToken", token);
+      localStorage.setItem("userData", JSON.stringify(patient));
+
+      // Also store the patient ID separately for easy access
+      localStorage.setItem("patientId", patient._id || patient.id);
+
+      toast.success("Login successful!");
+      // Redirect or update state
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Login failed");
+    }
+  };
   // Signup (Patient/Admin)
   const signup = async ({
     name,
@@ -100,7 +118,16 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, signup, login, doctorLogin, logout, doctorSignup }}
+      value={{
+        user,
+        signup,
+        login,
+        doctorLogin,
+        logout,
+        doctorSignup,
+        onSubmitHandler,
+        handlePatientLogin,
+      }}
     >
       {children}
     </AuthContext.Provider>
@@ -108,3 +135,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+export default AuthContext;

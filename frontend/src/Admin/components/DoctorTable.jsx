@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useContext } from "react";
+import { AppContext } from "../../context/AppContext";
 
-export default function DoctorTable({ doctors, onRemove }) {
+export default function DoctorTable() {
+  const { doctors, deleteDoctor } = useContext(AppContext);
+
   return (
     <div className="card overflow-hidden">
       <table className="min-w-full text-sm">
@@ -32,7 +35,7 @@ export default function DoctorTable({ doctors, onRemove }) {
               <td className="px-4 py-3">${doc.fees}</td>
               <td className="px-4 py-3 text-right">
                 <button
-                  onClick={() => onRemove?.(doc._id)}
+                  onClick={() => deleteDoctor(doc._id)}
                   className="btn btn-ghost text-red-600"
                 >
                   Remove

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import {
   CalendarCheck2,
   Stethoscope,
@@ -6,40 +6,11 @@ import {
   ClipboardList,
 } from "lucide-react";
 import StatCard from "../components/StatCard.jsx";
-import { doctors } from "../../assets/assets_frontend/assets.js";
-
-const latest = [
-  {
-    id: 1,
-    doctor: doctors[0],
-    patient: "Alex Carter",
-    date: "30 Jun, 2025",
-    time: "10:30 AM",
-  },
-  {
-    id: 2,
-    doctor: doctors[1],
-    patient: "Mia Johnson",
-    date: "30 Jun, 2025",
-    time: "11:00 AM",
-  },
-  {
-    id: 3,
-    doctor: doctors[2],
-    patient: "Sam Lee",
-    date: "01 Jul, 2025",
-    time: "09:15 AM",
-  },
-  {
-    id: 4,
-    doctor: doctors[3],
-    patient: "Olivia Davis",
-    date: "01 Jul, 2025",
-    time: "01:45 PM",
-  },
-];
+import { AppContext } from "../../context/AppContext.jsx";
 
 export default function Dashboard() {
+  const { doctors, patients, appointments } = useContext(AppContext);
+
   return (
     <div className="space-y-6">
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -50,18 +21,22 @@ export default function Dashboard() {
         />
         <StatCard
           label="Appointments"
-          value={latest.length}
+          value={appointments.length}
           icon={<CalendarCheck2 size={18} />}
         />
-        <StatCard label="Patients" value={5} icon={<Users size={18} />} />
+        <StatCard
+          label="Patients"
+          value={patients.length}
+          icon={<Users size={18} />}
+        />
         <StatCard
           label="Specialities"
-          value={6}
+          value={new Set(doctors.map((d) => d.speciality)).size}
           icon={<ClipboardList size={18} />}
         />
       </div>
 
-      <div className="card">
+      {/* <div className="card">
         <div className="px-5 py-4 border-b">
           <div className="font-medium text-gray-900">Latest Appointments</div>
         </div>
@@ -85,7 +60,7 @@ export default function Dashboard() {
             </li>
           ))}
         </ul>
-      </div>
+      </div> */}
     </div>
   );
 }

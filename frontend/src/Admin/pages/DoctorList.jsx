@@ -1,12 +1,9 @@
-import React, { useState } from "react";
+import React, { useContext } from "react";
 import DoctorTable from "../components/DoctorTable.jsx";
-import { doctors as seed } from "../../assets/assets_frontend/assets.js";
+import { AppContext } from "../../context/AppContext.jsx";
 
 export default function DoctorList() {
-  const [list, setList] = useState(seed);
-  function remove(id) {
-    setList((l) => l.filter((d) => d._id !== id));
-  }
+  const { doctors, deleteDoctor } = useContext(AppContext);
 
   return (
     <div className="space-y-4">
@@ -16,7 +13,7 @@ export default function DoctorList() {
           Add Doctor
         </a>
       </div>
-      <DoctorTable doctors={list} onRemove={remove} />
+      <DoctorTable doctors={doctors} onRemove={deleteDoctor} />
     </div>
   );
 }

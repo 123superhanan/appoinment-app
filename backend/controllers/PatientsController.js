@@ -32,17 +32,16 @@ export const registerPatient = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res
-      .status(201)
-      .json({
-        token,
-        patient: { id: patient._id, name: patient.name, email: patient.email },
-      });
+    res.status(201).json({
+      token,
+      patient: { id: patient._id, name: patient.name, email: patient.email },
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
+// Patient login
 // Patient login
 export const loginPatient = async (req, res) => {
   try {
@@ -60,12 +59,16 @@ export const loginPatient = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res
-      .status(200)
-      .json({
-        token,
-        patient: { id: patient._id, name: patient.name, email: patient.email },
-      });
+    res.status(200).json({
+      token,
+      patient: {
+        _id: patient._id, // ✅ Include _id (not just id)
+        id: patient._id, // ✅ Also include id for backward compatibility
+        name: patient.name,
+        email: patient.email,
+        role: patient.role,
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

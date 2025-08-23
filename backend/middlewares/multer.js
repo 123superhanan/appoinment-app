@@ -1,28 +1,24 @@
 import multer from "multer";
-import path from "path";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../config/cloudinary.js"; // your cloudinary config
 
-// Multer storage (temporary, before uploading to cloudinary)
-const storage = multer.diskStorage({
-  filename: (req, file, cb) => {
-    cb(
-      null,
-      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-    );
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "doctors",
+    format: async () => "png", // always convert to PNG
+    public_id: (req, file) =>
+      `doctor-${Date.now()}-${Math.round(Math.random() * 1e9)}`,
   },
 });
 
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png/;
-  const ext = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mime = allowedTypes.test(file.mimetype);
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Only image files are allowed!"), false);
+  },
+});
 
-  if (ext && mime) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only .jpeg, .jpg, .png files are allowed"));
-  }
-};
-
-const upload = multer({ storage, fileFilter });
-
-export default upload;
+export const uploadMiddleware = upload.single("image");

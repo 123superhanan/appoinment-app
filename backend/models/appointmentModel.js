@@ -1,9 +1,17 @@
 import mongoose from "mongoose";
 
-const appointmentSchema = mongoose.Schema(
+const appointmentSchema = new mongoose.Schema(
   {
-    patient: { type: String, required: true }, // later we can link to User with ref
-    doctor: { type: String, required: true }, // later we can link to Doctor with ref
+    patient: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Patient",
+      required: true,
+    },
+    doctor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Doctor",
+      required: true,
+    },
     date: { type: String, required: true },
     time: { type: String, required: true },
     status: { type: String, default: "pending" },
@@ -11,5 +19,8 @@ const appointmentSchema = mongoose.Schema(
   { timestamps: true }
 );
 
-const Appointment = mongoose.model("Appointment", appointmentSchema);
+const Appointment =
+  mongoose.models.Appointment ||
+  mongoose.model("Appointment", appointmentSchema);
+
 export default Appointment;
