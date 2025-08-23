@@ -1,30 +1,41 @@
 // src/doctor/components/DoctorStatsCards.jsx
-import React from "react";
+import React, { useContext, useEffect } from "react";
 import { CalendarDays, CheckCircle, Clock, XCircle } from "lucide-react";
+import { AppContext } from "../../context/AppContext";
 
 const DoctorStatsCards = () => {
+  const { appointments, fetchAppointments } = useContext(AppContext);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  // Calculate stats from appointments
   const stats = [
     {
       title: "Total Appointments",
-      value: 120,
+      value: appointments.length,
       icon: <CalendarDays className="w-6 h-6" />,
       color: "bg-[#5f6fff] text-white",
     },
     {
       title: "Upcoming",
-      value: 15,
+      value: appointments.filter(
+        (appt) =>
+          new Date(appt.date) > new Date() && appt.status === "scheduled"
+      ).length,
       icon: <Clock className="w-6 h-6" />,
       color: "bg-green-500 text-white",
     },
     {
       title: "Completed",
-      value: 95,
+      value: appointments.filter((appt) => appt.status === "completed").length,
       icon: <CheckCircle className="w-6 h-6" />,
       color: "bg-blue-500 text-white",
     },
     {
       title: "Canceled",
-      value: 10,
+      value: appointments.filter((appt) => appt.status === "cancelled").length,
       icon: <XCircle className="w-6 h-6" />,
       color: "bg-red-500 text-white",
     },

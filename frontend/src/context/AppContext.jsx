@@ -1,13 +1,44 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode"; // ✅ browser-friendly JWT parser
 
+// Admin API client
 const adminApi = axios.create({
   baseURL: "/api/admin",
 });
 
-//  automatically attach token from localStorage
+// User/Patient API client
+const userApi = axios.create({
+  baseURL: "/api",
+});
+
+// Doctor API client (you had functions for doctor but no client defined before)
+const doctorApi = axios.create({
+  baseURL: "/api/doctor",
+});
+
+// Automatically attach admin token
 adminApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem("adminToken"); // <-- must be set after admin login
+  const token = localStorage.getItem("adminToken");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Automatically attach user token
+userApi.interceptors.request.use((config) => {
+  const token =
+    localStorage.getItem("userToken") || localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Automatically attach doctor token
+doctorApi.interceptors.request.use((config) => {
+  const token = localStorage.getItem("doctorToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -18,16 +49,59 @@ export const AppContext = createContext();
 
 const AppContextProvider = ({ children }) => {
   const currencySymbol = "$";
-
   const [doctors, setDoctors] = useState([]);
   const [patients, setPatients] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // ================== AUTH FUNCTIONS ==================
+  const getCurrentUser = () => {
+    const adminToken = localStorage.getItem("adminToken");
+    const userToken =
+      localStorage.getItem("userToken") || localStorage.getItem("token");
+    const doctorToken = localStorage.getItem("doctorToken");
+
+    if (adminToken) return { role: "admin", token: adminToken };
+    if (userToken) return { role: "patient", token: userToken };
+    if (doctorToken) return { role: "doctor", token: doctorToken };
+    return null;
+  };
+
+  const getPatientId = () => {
+    // First try to get from dedicated storage
+    const patientId = localStorage.getItem("patientId");
+    if (patientId) return patientId;
+
+    // Then try to get from userData
+    const userData = localStorage.getItem("userData");
+    if (userData) {
+      try {
+        const parsed = JSON.parse(userData);
+        return parsed._id || parsed.id;
+      } catch (e) {
+        console.error("Error parsing user data:", e);
+      }
+    }
+
+    // Finally, check if there's a token and decode it
+    const token = localStorage.getItem("userToken");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token); // ✅ safe decode
+        return decoded.id || decoded._id;
+      } catch (e) {
+        console.error("Error decoding token:", e);
+      }
+    }
+
+    return null;
+  };
 
   // ================== FETCH FUNCTIONS ==================
   const fetchDoctors = async () => {
     try {
-      const { data } = await adminApi.get("/doctors"); // use adminApi
+      const { data } = await adminApi.get("/doctors"); // ✅ FIXED
       setDoctors(data.doctors || []);
     } catch (error) {
       console.error("Failed to fetch doctors", error.response?.data || error);
@@ -37,7 +111,10 @@ const AppContextProvider = ({ children }) => {
 
   const fetchPatients = async () => {
     try {
-      const { data } = await adminApi.get("/patients"); // ✅ use adminApi
+      const user = getCurrentUser();
+      if (user?.role !== "admin") return;
+
+      const { data } = await adminApi.get("/patients");
       setPatients(data.patients || []);
     } catch (error) {
       console.error("Failed to fetch patients", error);
@@ -47,86 +124,50 @@ const AppContextProvider = ({ children }) => {
 
   const fetchAppointments = async () => {
     try {
-      const { data } = await adminApi.get("/appointment"); // ✅ use adminApi
-      setAppointments(data.appointments || []);
+      const user = getCurrentUser();
+
+      if (user?.role === "admin") {
+        const { data } = await adminApi.get("/appointments");
+        setAppointments(data.appointments || []);
+      } else if (user?.role === "patient") {
+        const { data } = await userApi.get("/appointments");
+        setAppointments(data.appointments || []);
+      }
     } catch (err) {
       console.error("Error fetching appointments:", err);
       setAppointments([]);
     }
   };
 
-  // ================== DOCTOR CRUD ==================
-  const addDoctor = async (doctorData) => {
-    try {
-      const { data } = await adminApi.post("/doctors", doctorData);
-      setDoctors((prev) => [...prev, data.doctor]);
-      return data;
-    } catch (err) {
-      console.error("Error adding doctor:", err);
-    }
-  };
-
-  const updateDoctor = async (id, updatedData) => {
-    try {
-      const { data } = await adminApi.put(`/doctors/${id}`, updatedData); // ✅
-      setDoctors((prev) => prev.map((doc) => (doc._id === id ? data : doc)));
-      return data;
-    } catch (err) {
-      console.error("Error updating doctor:", err);
-    }
-  };
-
-  const deleteDoctor = async (id) => {
-    try {
-      await adminApi.delete(`/doctors/${id}`); // ✅
-      setDoctors((prev) => prev.filter((doc) => doc._id !== id));
-    } catch (err) {
-      console.error("Error deleting doctor:", err);
-    }
-  };
-
-  const toggleDoctorAvailability = async (id) => {
-    try {
-      const { data } = await adminApi.patch(`/doctors/${id}/availability`); // ✅
-      setDoctors((prev) => prev.map((doc) => (doc._id === id ? data : doc)));
-    } catch (err) {
-      console.error("Error toggling availability:", err);
-    }
-  };
-  // inside AppContextProvider
-  const uploadImage = async (file) => {
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const { data } = await adminApi.post("/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      return data; // { url: "..." }
-    } catch (err) {
-      console.error("Image upload failed:", err);
-      throw err;
-    }
-  };
-
-  // ================== DOCTOR-SIDE (self) ==================
-
-  const toggleOwnAvailability = async () => {
-    try {
-      const { data } = await adminApi.patch("/api/doctors/availability");
-      return data;
-    } catch (err) {
-      console.error("Error toggling own availability:", err);
-    }
-  };
-
-  // ================== APPOINTMENTS CRUD ==================
+  // ================== APPOINTMENTS ==================
   const addAppointment = async (appointmentData) => {
     try {
-      const { data } = await adminApi.post("/appointments", appointmentData);
-      setAppointments((prev) => [...prev, data]);
-      return data;
+      const user = getCurrentUser();
+
+      if (user?.role === "admin") {
+        const { data } = await adminApi.post("/appointments", appointmentData);
+        setAppointments((prev) => [...prev, data.appointment]);
+        return data;
+      } else if (user?.role === "patient") {
+        const patientId = getPatientId();
+        if (!patientId) {
+          throw new Error("Patient ID not found. Please login again.");
+        }
+
+        const appointmentWithPatient = {
+          ...appointmentData,
+          patientId: patientId,
+        };
+
+        const { data } = await userApi.post(
+          "/appointments",
+          appointmentWithPatient
+        );
+        setAppointments((prev) => [...prev, data.appointment]);
+        return data;
+      } else {
+        throw new Error("You must be logged in to book an appointment");
+      }
     } catch (err) {
       console.error("Error adding appointment:", err);
       throw err;
@@ -135,57 +176,253 @@ const AppContextProvider = ({ children }) => {
 
   const deleteAppointment = async (id) => {
     try {
-      await adminApi.delete(`/appointments/${id}`); // ✅
-      setAppointments((prev) => prev.filter((a) => a._id !== id));
+      const user = getCurrentUser();
+
+      if (user?.role === "admin") {
+        await adminApi.delete(`/appointments/${id}`);
+      } else {
+        await userApi.delete(`/appointments/${id}`);
+      }
+
+      setAppointments((prev) => prev.filter((app) => app._id !== id));
+      return { success: true };
     } catch (err) {
       console.error("Error deleting appointment:", err);
+      throw err;
     }
   };
 
-  const updateDoctorProfile = async (profileData) => {
+  const updateAppointmentStatus = async (id, status) => {
     try {
-      const { data } = await adminApi.put("/api/doctors/profile", profileData);
+      const user = getCurrentUser();
+      let data;
+
+      if (user?.role === "admin") {
+        const response = await adminApi.patch(`/appointments/${id}/status`, {
+          status,
+        });
+        data = response.data;
+      } else {
+        const response = await userApi.patch(`/appointments/${id}/status`, {
+          status,
+        });
+        data = response.data;
+      }
+
+      setAppointments((prev) =>
+        prev.map((appt) => (appt._id === id ? { ...appt, status } : appt))
+      );
+
+      return data;
+    } catch (err) {
+      console.error("Error updating appointment status:", err);
+      throw err;
+    }
+  };
+
+  // ================== UPLOAD FUNCTION ==================
+  const uploadImage = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const user = getCurrentUser();
+      const api = user?.role === "admin" ? adminApi : userApi;
+
+      const { data } = await api.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      return data;
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      throw err;
+    }
+  };
+
+  // ================== DOCTOR CRUD (Admin only) ==================
+  const addDoctor = async (doctorData) => {
+    try {
+      const user = getCurrentUser();
+      if (user?.role !== "admin") {
+        throw new Error("Only admin can add doctors");
+      }
+
+      const { data } = await adminApi.post("/doctors", doctorData);
+      setDoctors((prev) => [...prev, data.doctor]);
+      return data;
+    } catch (err) {
+      console.error("Error adding doctor:", err);
+      throw err;
+    }
+  };
+
+  const updateDoctor = async (id, doctorData) => {
+    try {
+      const user = getCurrentUser();
+      if (user?.role !== "admin") {
+        throw new Error("Only admin can update doctors");
+      }
+
+      const { data } = await adminApi.put(`/doctors/${id}`, doctorData); // ✅ FIXED plural
+      setDoctors((prev) =>
+        prev.map((doctor) => (doctor._id === id ? data.doctor : doctor))
+      );
+      return data;
+    } catch (err) {
+      console.error("Error updating doctor:", err);
+      throw err;
+    }
+  };
+
+  const deleteDoctor = async (id) => {
+    try {
+      const user = getCurrentUser();
+      if (user?.role !== "admin") {
+        throw new Error("Only admin can delete doctors");
+      }
+
+      await adminApi.delete(`/doctors/${id}`);
+      setDoctors((prev) => prev.filter((doctor) => doctor._id !== id));
+      return { success: true };
+    } catch (err) {
+      console.error("Error deleting doctor:", err);
+      throw err;
+    }
+  };
+
+  // ================== DOCTOR PROFILE FUNCTIONS ==================
+  const updateDoctorProfile = async (doctorData) => {
+    try {
+      const user = getCurrentUser();
+      if (user?.role !== "doctor") {
+        throw new Error("Only doctors can update their profile");
+      }
+
+      const { data } = await doctorApi.put("/profile", doctorData);
       return data;
     } catch (err) {
       console.error("Error updating doctor profile:", err);
+      throw err;
     }
   };
+
+  const toggleDoctorAvailability = async (isAvailable) => {
+    try {
+      const user = getCurrentUser();
+      if (user?.role !== "doctor") {
+        throw new Error("Only doctors can update their availability");
+      }
+
+      const { data } = await doctorApi.patch("/availability", { isAvailable });
+      return data;
+    } catch (err) {
+      console.error("Error toggling doctor availability:", err);
+      throw err;
+    }
+  };
+
+  const getDoctorAppointments = async () => {
+    try {
+      const user = getCurrentUser();
+      if (user?.role !== "doctor") {
+        throw new Error("Only doctors can view their appointments");
+      }
+
+      const { data } = await doctorApi.get("/appointments");
+      setAppointments(data.appointments || []);
+      return data;
+    } catch (err) {
+      console.error("Error fetching doctor appointments:", err);
+      throw err;
+    }
+  };
+
+  // ================== PATIENT FUNCTIONS (Admin only) ==================
+  const updatePatient = async (id, patientData) => {
+    try {
+      const user = getCurrentUser();
+      if (user?.role !== "admin") {
+        throw new Error("Only admin can update patients");
+      }
+
+      const { data } = await adminApi.put(`/patients/${id}`, patientData);
+      setPatients((prev) =>
+        prev.map((patient) => (patient._id === id ? data.patient : patient))
+      );
+      return data;
+    } catch (err) {
+      console.error("Error updating patient:", err);
+      throw err;
+    }
+  };
+
+  const deletePatient = async (id) => {
+    try {
+      const user = getCurrentUser();
+      if (user?.role !== "admin") {
+        throw new Error("Only admin can delete patients");
+      }
+
+      await adminApi.delete(`/patients/${id}`);
+      setPatients((prev) => prev.filter((patient) => patient._id !== id));
+      return { success: true };
+    } catch (err) {
+      console.error("Error deleting patient:", err);
+      throw err;
+    }
+  };
+
   // ================== INIT FETCH ==================
   useEffect(() => {
     fetchDoctors();
-    fetchPatients();
-    fetchAppointments();
+
+    const user = getCurrentUser();
+    if (user?.role === "admin") {
+      fetchPatients();
+      fetchAppointments();
+    } else if (user?.role === "patient") {
+      fetchAppointments();
+    } else if (user?.role === "doctor") {
+      getDoctorAppointments();
+    }
   }, []);
 
   // ================== CONTEXT VALUE ==================
   const value = {
     currencySymbol,
     loading,
+    setLoading,
+    currentUser: getCurrentUser(),
+    getPatientId,
 
-    // doctors (admin side)
+    // doctors
     doctors,
     fetchDoctors,
     addDoctor,
     updateDoctor,
     deleteDoctor,
-    toggleDoctorAvailability,
 
-    // doctors (self side)
-    updateDoctorProfile,
-    toggleOwnAvailability,
-
-    // patients
+    // patients (admin only)
     patients,
     fetchPatients,
+    updatePatient,
+    deletePatient,
 
     // appointments
     appointments,
     fetchAppointments,
     addAppointment,
     deleteAppointment,
+    updateAppointmentStatus,
 
     // image upload
     uploadImage,
+
+    // doctor
+    updateDoctorProfile,
+    toggleDoctorAvailability,
+    getDoctorAppointments,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

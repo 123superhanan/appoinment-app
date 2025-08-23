@@ -21,7 +21,7 @@ connectCloudinary();
 //api endpoints
 app.use("/api/admin/auth", adminAuthRouter); // public auth routes - NO AUTH MIDDLEWARE
 app.use("/api/admin", adminRouter); // protected admin routes - WITH AUTH MIDDLEWARE
-app.use("/api/doctors", doctorRouter);
+app.use("/api/doctor", doctorRouter);
 app.use("/api/auth", authRouter); // regular user auth routes
 app.use("/api/patients", patRouter); // patient routes
 

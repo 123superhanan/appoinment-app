@@ -23,23 +23,23 @@ import {
 } from "../middlewares/authMiddleware.js";
 
 const adminRouter = express.Router();
+
+// Public endpoints (no auth)
 adminRouter.get("/doctors", getDoctors);
 adminRouter.get("/patients", getPatients);
-
 adminRouter.post("/upload", uploadImage);
+
 // Protect all routes below
 adminRouter.use(authMiddleware, authorizeRoles("admin"));
 
-// Doctor routes
+// Doctor routes (admin only)
 adminRouter.post("/doctors", createDoctor);
-adminRouter.get("/appointment", getAppointments);
 adminRouter.get("/doctors/:id", getDoctorById);
 adminRouter.put("/doctors/:id", updateDoctor);
 adminRouter.delete("/doctors/:id", deleteDoctor);
 adminRouter.patch("/doctors/:id/availability", toggleAvailability);
 
 // Patient routes
-
 adminRouter.get("/patients/:id", getPatientById);
 adminRouter.put("/patients/:id", updatePatient);
 adminRouter.delete("/patients/:id", deletePatient);
@@ -55,8 +55,9 @@ adminRouter.delete(
   authorizeRoles("superadmin"),
   hardDeletePatient
 );
-// Appointment routes
 
+// Appointment routes
+adminRouter.get("/appointments", getAppointments);
 adminRouter.post("/appointments", createAppointment);
 adminRouter.delete("/appointments/:id", deleteAppointment);
 

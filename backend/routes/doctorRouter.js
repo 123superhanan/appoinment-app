@@ -1,28 +1,21 @@
 import express from "express";
 import {
-  updateProfile,
-  toggleAvailability,
-} from "../controllers/doctorController.js";
-import {
   authMiddleware,
   authorizeRoles,
 } from "../middlewares/authMiddleware.js";
+import {
+  updateProfile,
+  toggleAvailability,
+  getAppointments,
+} from "../controllers/doctorController.js";
 
 const doctorRouter = express.Router();
 
-// Doctor management routes (protected)
-doctorRouter.put(
-  "/profile",
-  authMiddleware,
-  authorizeRoles("doctor"),
-  updateProfile
-);
+// Protect all doctor routes
+doctorRouter.use(authMiddleware, authorizeRoles("doctor"));
 
-doctorRouter.patch(
-  "/availability",
-  authMiddleware,
-  authorizeRoles("doctor"),
-  toggleAvailability
-);
+doctorRouter.put("/profile", updateProfile);
+doctorRouter.patch("/availability", toggleAvailability);
+doctorRouter.get("/appointments", getAppointments);
 
 export default doctorRouter;

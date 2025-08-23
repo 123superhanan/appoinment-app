@@ -45,3 +45,12 @@ export const toggleAvailability = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+export const getAppointments = async (req, res) => {
+  try {
+    const appointments = await Appointment.find().sort({ createdAt: -1 });
+    res.status(200).json({ appointments });
+  } catch (error) {
+    console.error("Error fetching appointments:", error);
+    res.status(500).json({ message: "Failed to fetch appointments" });
+  }
+};
