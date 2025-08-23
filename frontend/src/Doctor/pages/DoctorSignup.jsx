@@ -21,18 +21,22 @@ const DoctorSignup = () => {
   const onSubmitHandler = async (e) => {
     e.preventDefault();
     try {
-      await doctorSignup({
-        name,
-        email,
-        password,
-        image,
-        speciality,
-        degree,
-        experience,
-        about,
-        fees,
-        address: { line1: addressLine1, line2: addressLine2 },
-      });
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("email", email);
+      formData.append("password", password);
+      formData.append("speciality", speciality);
+      formData.append("degree", degree);
+      formData.append("experience", experience);
+      formData.append("about", about);
+      formData.append("fees", fees);
+      formData.append("addressLine1", addressLine1);
+      formData.append("addressLine2", addressLine2);
+      if (image) {
+        formData.append("image", image); // this is your file
+      }
+
+      await doctorSignup(formData);
 
       toast.success("Doctor account created!");
       navigate("/doctor/");

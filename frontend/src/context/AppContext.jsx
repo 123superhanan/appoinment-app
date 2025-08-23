@@ -130,7 +130,7 @@ const AppContextProvider = ({ children }) => {
         const { data } = await adminApi.get("/appointments");
         setAppointments(data.appointments || []);
       } else if (user?.role === "patient") {
-        const { data } = await userApi.get("/appointments");
+        const { data } = await userApi.get("/patients/appointments");
         setAppointments(data.appointments || []);
       }
     } catch (err) {
