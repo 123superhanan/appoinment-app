@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config";
 import connectDB from "./config/db.js";
-import connectCloudinary from "./config/cloudinary.js";
+//import cloudinary from "./config/cloudinary.js";
 import adminRouter from "./routes/adminRouter.js";
 import doctorRouter from "./routes/doctorRouter.js";
 import authRouter from "./routes/authRoutes.js";
@@ -16,7 +16,6 @@ const port = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 connectDB();
-connectCloudinary();
 
 //api endpoints
 app.use("/api/admin/auth", adminAuthRouter); // public auth routes - NO AUTH MIDDLEWARE

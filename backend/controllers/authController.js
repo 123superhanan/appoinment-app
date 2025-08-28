@@ -10,32 +10,19 @@ const generateToken = (user) =>
   });
 
 // ------------------- Admin/Patient Login -------------------
-// controllers/authController.js - Updated userLogin with detailed logging
 export const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check if user exists
-    const user = await userModel.findOne({ email });
-
-    if (!user) {
-      console.log("User not found for email:", email);
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Check password
+    const user = await userModel.findOne({ email: email.toLowerCase() });
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      console.log("Password mismatch for email:", email);
+    if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
-    }
 
-    // Generate token
     const token = generateToken(user);
-
-    res.status(200).json({
+    res.json({
       token,
       user: {
         id: user._id,
@@ -46,10 +33,10 @@ export const userLogin = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("User login error:", error);
     res.status(500).json({ message: error.message });
   }
 };
+
 // ------------------- Doctor Login -------------------
 
 export const doctorLogin = async (req, res) => {
@@ -57,7 +44,7 @@ export const doctorLogin = async (req, res) => {
     const { email, password } = req.body;
 
     // 1. Find doctor by email
-    const doctor = await Doctor.findOne({ email });
+    const doctor = await doctorModel.findOne({ email });
     if (!doctor) {
       return res.status(400).json({ message: "Doctor not found" });
     }
@@ -138,14 +125,26 @@ export const doctorSignup = async (req, res) => {
       experience,
       about,
       fees,
-      address,
+      addressLine1,
+      addressLine2,
     } = req.body;
-    const image = req.file ? req.file.filename : req.body.image || "";
-    // multer handles this
 
-    // Hash password, save doctor in DB with image
+    // 1️⃣ Check if doctor already exists
+    const existingDoctor = await doctorModel.findOne({ email });
+    if (existingDoctor) {
+      return res.status(400).json({ message: "Doctor already exists" });
+    }
+
+    // 2️⃣ Validate password
+    if (!password) {
+      return res.status(400).json({ message: "Password is required" });
+    }
+
+    // 3️⃣ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const doctor = await Doctor.create({
+
+    // 4️⃣ Create doctor
+    const doctor = await doctorModel.create({
       name,
       email,
       password: hashedPassword,
@@ -154,19 +153,26 @@ export const doctorSignup = async (req, res) => {
       experience,
       about,
       fees,
-      address: typeof address === "object" ? address : { line1: address },
-
-      image,
+      address: {
+        line1: addressLine1,
+        line2: addressLine2,
+      },
     });
 
+    // 5️⃣ Generate JWT token
     const token = jwt.sign(
       { id: doctor._id, role: "doctor" },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    res.status(201).json({ user: doctor, token });
+    // 6️⃣ Return doctor without password
+    const doctorSafe = doctor.toObject();
+    delete doctorSafe.password;
+
+    res.status(201).json({ user: doctorSafe, token });
   } catch (err) {
+    console.error("Doctor signup error:", err);
     res.status(400).json({ message: err.message });
   }
 };

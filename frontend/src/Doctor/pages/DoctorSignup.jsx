@@ -14,35 +14,33 @@ const DoctorSignup = () => {
   const [fees, setFees] = useState("");
   const [addressLine1, setAddressLine1] = useState("");
   const [addressLine2, setAddressLine2] = useState("");
-  const [image, setImage] = useState(""); // Add this state
+
   const { doctorSignup } = useAuth();
   const navigate = useNavigate();
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+
+    const doctorData = {
+      name,
+      email,
+      password,
+      speciality,
+      degree,
+      experience,
+      about,
+      fees,
+      addressLine1,
+      addressLine2,
+    };
+
     try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("email", email);
-      formData.append("password", password);
-      formData.append("speciality", speciality);
-      formData.append("degree", degree);
-      formData.append("experience", experience);
-      formData.append("about", about);
-      formData.append("fees", fees);
-      formData.append("addressLine1", addressLine1);
-      formData.append("addressLine2", addressLine2);
-      if (image) {
-        formData.append("image", image); // this is your file
-      }
-
-      await doctorSignup(formData);
-
-      toast.success("Doctor account created!");
+      const res = await doctorSignup(doctorData); // send JSON
+      toast.success("Doctor signup successful!");
       navigate("/doctor/");
     } catch (err) {
+      console.error("Doctor signup error:", err.response?.data || err);
       toast.error(err.response?.data?.message || "Signup failed");
-      console.error(err);
     }
   };
 
@@ -52,12 +50,7 @@ const DoctorSignup = () => {
       className="max-w-lg mx-auto p-6 bg-white shadow-lg rounded-lg flex flex-col gap-4"
     >
       <h2 className="text-2xl font-semibold">Doctor Sign Up</h2>
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setImage(e.target.files[0])}
-        className="border p-2 rounded"
-      />
+
       <input
         type="text"
         placeholder="Full Name"

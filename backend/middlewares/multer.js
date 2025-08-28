@@ -1,14 +1,13 @@
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
-import cloudinary from "../config/cloudinary.js"; // your cloudinary config
+import cloudinary from "../config/cloudinary.js"; // ✅ now this is the configured instance
 
 const storage = new CloudinaryStorage({
-  cloudinary,
+  cloudinary, // ✅ no error now
   params: {
     folder: "doctors",
     format: async () => "png",
-    public_id: (req, file) =>
-      `doctor-${Date.now()}-${Math.round(Math.random() * 1e9)}`,
+    public_id: () => `doctor-${Date.now()}-${Math.round(Math.random() * 1e9)}`,
   },
 });
 
@@ -21,5 +20,5 @@ const upload = multer({
   },
 });
 
-export { upload }; // ✅ add this
+export { upload };
 export const uploadMiddleware = upload.single("image");

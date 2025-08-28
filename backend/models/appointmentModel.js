@@ -4,15 +4,15 @@ const appointmentSchema = new mongoose.Schema(
   {
     patient: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Patient",
+      ref: "User", // ✅ match userModel
       required: true,
     },
     doctor: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Doctor",
+      ref: "Doctor", // ✅ matches doctorModel
       required: true,
     },
-    date: { type: String, required: true },
+    date: { type: Date, required: true },
     time: { type: String, required: true },
     status: { type: String, default: "pending" },
   },

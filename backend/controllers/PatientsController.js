@@ -1,6 +1,22 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import userModel from "../models/userModel.js";
+import Appointment from "../models/appointmentModel.js";
+import doctorModel from "../models/doctorModel.js";
+// Get logged-in patient's appointments
+export const getPatientAppointments = async (req, res) => {
+  try {
+    // req.user.id comes from authMiddleware (decoded JWT)
+    const appointments = await Appointment.find({ patient: req.user.id }) // filter by logged-in patient
+      .populate("doctor", "name speciality") // optional: include doctor info
+      .sort({ date: -1 });
+
+    res.status(200).json({ appointments });
+  } catch (err) {
+    console.error("Error fetching patient appointments:", err);
+    res.status(500).json({ message: "Failed to fetch appointments" });
+  }
+};
 
 // Patient signup
 export const registerPatient = async (req, res) => {
@@ -90,4 +106,31 @@ export const updatePatientProfile = async (req, res) => {
     .findByIdAndUpdate(req.user.id, updates, { new: true })
     .select("-password");
   res.status(200).json(patient);
+};
+
+export const bookAppointment = async (req, res) => {
+  try {
+    const { doctorId, date, time } = req.body;
+
+    const doctor = await doctorModel.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    const newAppointment = await Appointment.create({
+      patient: req.user.id, // ✅ use id, not _id
+      doctor: doctorId,
+      date,
+      time,
+      status: "pending",
+    });
+
+    res.status(201).json({
+      message: "Appointment booked successfully",
+      appointment: newAppointment,
+    });
+  } catch (error) {
+    console.error("❌ Error booking appointment:", error);
+    res.status(500).json({ message: "Server error while booking appointment" });
+  }
 };

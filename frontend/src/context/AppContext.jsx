@@ -1,21 +1,11 @@
 import { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode"; // ✅ browser-friendly JWT parser
-
-// Admin API client
-const adminApi = axios.create({
-  baseURL: "/api/admin",
-});
-
-// User/Patient API client
-const userApi = axios.create({
-  baseURL: "/api",
-});
-
-// Doctor API client (you had functions for doctor but no client defined before)
-const doctorApi = axios.create({
-  baseURL: "/api/doctor",
-});
+// AdminAuthContext.jsx
+import { adminApi } from "../utils/axios";
+import { userApi } from "../utils/axios";
+import { toast } from "react-toastify";
+import { doctorApi } from "../utils/axios";
 
 // Automatically attach admin token
 adminApi.interceptors.request.use((config) => {
@@ -54,7 +44,7 @@ const AppContextProvider = ({ children }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
   // ================== AUTH FUNCTIONS ==================
   const getCurrentUser = () => {
     const adminToken = localStorage.getItem("adminToken");
@@ -121,55 +111,44 @@ const AppContextProvider = ({ children }) => {
       setPatients([]);
     }
   };
-
   const fetchAppointments = async () => {
     try {
-      const user = getCurrentUser();
+      const token = localStorage.getItem("token"); // patient JWT
+      if (!token) throw new Error("No auth token found");
 
-      if (user?.role === "admin") {
-        const { data } = await adminApi.get("/appointments");
-        setAppointments(data.appointments || []);
-      } else if (user?.role === "patient") {
-        const { data } = await userApi.get("/patients/appointments");
-        setAppointments(data.appointments || []);
-      }
+      const { data } = await userApi.get("/appointments", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // data.appointments should come from backend
+      setAppointments(data.appointments || []);
     } catch (err) {
       console.error("Error fetching appointments:", err);
       setAppointments([]);
     }
   };
 
-  // ================== APPOINTMENTS ==================
-  const addAppointment = async (appointmentData) => {
+  const addAppointmentPatient = async ({ doctorId, date, time }) => {
     try {
-      const user = getCurrentUser();
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No auth token found");
 
-      if (user?.role === "admin") {
-        const { data } = await adminApi.post("/appointments", appointmentData);
-        setAppointments((prev) => [...prev, data.appointment]);
-        return data;
-      } else if (user?.role === "patient") {
-        const patientId = getPatientId();
-        if (!patientId) {
-          throw new Error("Patient ID not found. Please login again.");
-        }
+      const { data } = await userApi.post(
+        "/appointments",
+        { doctorId, date, time },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-        const appointmentWithPatient = {
-          ...appointmentData,
-          patientId: patientId,
-        };
+      // After successful booking, fetch updated appointments
+      await fetchAppointments();
 
-        const { data } = await userApi.post(
-          "/appointments",
-          appointmentWithPatient
-        );
-        setAppointments((prev) => [...prev, data.appointment]);
-        return data;
-      } else {
-        throw new Error("You must be logged in to book an appointment");
-      }
+      toast.success("Appointment booked successfully ✅");
+      return data.appointment;
     } catch (err) {
-      console.error("Error adding appointment:", err);
+      console.error("Error booking appointment:", err);
+      toast.error(
+        err.response?.data?.message || "Failed to book appointment ❌"
+      );
       throw err;
     }
   };
@@ -191,6 +170,7 @@ const AppContextProvider = ({ children }) => {
       throw err;
     }
   };
+  // Patient books an appointment for themselves
 
   const updateAppointmentStatus = async (id, status) => {
     try {
@@ -239,7 +219,9 @@ const AppContextProvider = ({ children }) => {
       throw err;
     }
   };
-
+  const selectAppointmentForPayment = (appt) => {
+    setSelectedAppointment(appt);
+  };
   // ================== DOCTOR CRUD (Admin only) ==================
   const addDoctor = async (doctorData) => {
     try {
@@ -372,6 +354,18 @@ const AppContextProvider = ({ children }) => {
       throw err;
     }
   };
+  const handlePayment = async () => {
+    try {
+      await updateAppointmentStatus(selectedAppointment._id, "paid");
+      toast.success("Payment successful ✅");
+      // Clear selection
+      selectAppointmentForPayment(null);
+      navigate("/myAppointment");
+    } catch (err) {
+      console.error(err);
+      toast.error("Payment failed ❌");
+    }
+  };
 
   // ================== INIT FETCH ==================
   useEffect(() => {
@@ -395,14 +389,15 @@ const AppContextProvider = ({ children }) => {
     setLoading,
     currentUser: getCurrentUser(),
     getPatientId,
-
+    selectAppointmentForPayment,
+    handlePayment,
     // doctors
     doctors,
     fetchDoctors,
     addDoctor,
     updateDoctor,
     deleteDoctor,
-
+    addAppointmentPatient,
     // patients (admin only)
     patients,
     fetchPatients,
@@ -412,7 +407,7 @@ const AppContextProvider = ({ children }) => {
     // appointments
     appointments,
     fetchAppointments,
-    addAppointment,
+    //addAppointment,
     deleteAppointment,
     updateAppointmentStatus,
 

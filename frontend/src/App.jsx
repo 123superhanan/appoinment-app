@@ -34,6 +34,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import DoctorSignup from "./Doctor/pages/DoctorSignup";
 import DoctorLogin from "./Doctor/pages/DoctorLogin";
+import Payment from "./pages/Payment";
 const App = () => {
   return (
     <>
@@ -52,7 +53,7 @@ const App = () => {
           <Route path="doctor-login" element={<DoctorLogin />} />
           <Route path="doctor-signup" element={<DoctorSignup />} />
           <Route path="/admin-login" element={<AdminLogin />} />
-
+          <Route path="/payment" element={<Payment />} />
           {/* --- Admin --- */}
           <Route
             path="/admin/*"

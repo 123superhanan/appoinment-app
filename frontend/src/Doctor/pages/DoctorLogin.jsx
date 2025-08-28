@@ -14,10 +14,9 @@ const DoctorLogin = () => {
     try {
       await doctorLogin({ email, password });
       toast.success("Doctor login successful!");
-      navigate("/doctor/");
+      navigate("/doctor/"); // ✅ consistent path
     } catch (err) {
       toast.error(err.response?.data?.message || "Login failed");
-      console.error(err);
     }
   };
 

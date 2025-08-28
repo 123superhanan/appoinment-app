@@ -1,31 +1,27 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
-import { toast } from "react-toastify"; // make sure this is imported
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-
+import { authApi } from "../utils/axios";
+import { doctorApi } from "../utils/axios";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // ---------------- Patient Login ----------------
-  const handlePatientLogin = async (loginData) => {
-    try {
-      const response = await axios.post("/api/auth/login", loginData);
-      const { token, patient } = response.data;
+  // Initialize user from localStorage
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem("userData");
+    return saved ? JSON.parse(saved) : null;
+  });
 
-      localStorage.setItem("userToken", token);
-      localStorage.setItem("userData", JSON.stringify(patient));
-      localStorage.setItem("patientId", patient._id || patient.id);
-
-      toast.success("Patient login successful!");
-      setUser(patient);
-      navigate("/patient/dashboard");
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Patient login failed");
+  // Set Axios default token header if token exists
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
-  };
+  }, []);
 
   // ---------------- Patient/Admin Signup ----------------
   const signup = async ({
@@ -42,59 +38,49 @@ export const AuthProvider = ({ children }) => {
       role,
       gender,
     });
-
     setUser(res.data.user);
     localStorage.setItem("token", res.data.token);
+    localStorage.setItem("userData", JSON.stringify(res.data.user));
   };
 
   // ---------------- Patient/Admin Login ----------------
   const login = async ({ email, password }) => {
-    const res = await axios.post("/api/auth/login", { email, password });
-    setUser(res.data.user);
-    localStorage.setItem("token", res.data.token);
+    try {
+      const res = await authApi.post("/login", { email, password });
+      setUser(res.data.user);
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userData", JSON.stringify(res.data.user));
+      return res.data;
+    } catch (err) {
+      console.error("Login failed:", err.response?.data || err.message);
+      throw err;
+    }
   };
 
   // ---------------- Doctor Login ----------------
   const doctorLogin = async ({ email, password }) => {
     try {
-      // 🔑 Use doctor-specific endpoint
-      const res = await axios.post("/api/auth/doctor/login", {
-        email,
-        password,
-      });
-
+      const res = await doctorApi.post("/login", { email, password });
       setUser(res.data.user);
       localStorage.setItem("token", res.data.token);
-
-      toast.success("Doctor login successful!");
-      navigate("/doctor/dashboard");
-
+      localStorage.setItem("userData", JSON.stringify(res.data.user));
       return res.data;
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || "Doctor login failed";
-      toast.error(errorMessage);
+      console.error("Doctor login error:", error.response?.data || error);
       throw error;
     }
   };
 
   // ---------------- Doctor Signup ----------------
-  const doctorSignup = async (formData) => {
+  const doctorSignup = async (doctorData) => {
     try {
-      const res = await axios.post("/api/auth/doctor/signup", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
+      const res = await doctorApi.post("/signup", doctorData);
       setUser(res.data.user);
-      localStorage.setItem("token", res.data.token);
-
-      toast.success("Doctor signup successful!");
-      navigate("/doctor/dashboard");
-
+      localStorage.setItem("token", res.data.token); // store token
+      localStorage.setItem("userData", JSON.stringify(res.data.user));
       return res.data;
     } catch (error) {
       console.error("Doctor signup error:", error.response?.data || error);
-      toast.error(error.response?.data?.message || "Doctor signup failed");
       throw error;
     }
   };
@@ -103,24 +89,14 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("token");
-    localStorage.removeItem("userToken");
     localStorage.removeItem("userData");
-    localStorage.removeItem("patientId");
     toast.info("Logged out successfully");
     navigate("/login");
   };
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        signup,
-        login,
-        doctorLogin,
-        doctorSignup,
-        handlePatientLogin,
-        logout,
-      }}
+      value={{ user, signup, login, doctorLogin, doctorSignup, logout }}
     >
       {children}
     </AuthContext.Provider>

@@ -2,26 +2,9 @@
 
 // --- USERS ---
 export const users = [
-  {
-    name: "Admin User",
-    email: "admin@example.com",
-    password: "123456", // plain password (will be hashed by schema)
-    isAdmin: true,
-    gender: "Male",
-  },
-
-  {
-    name: "John Doe",
-    email: "john@example.com",
-    password: "123456",
-    gender: "Male",
-  },
-  {
-    name: "Sarah Khan",
-    email: "sarah@example.com",
-    password: "123456",
-    gender: "Male",
-  },
+  { name: "John Doe", email: "john@example.com", password: "123456" },
+  { name: "Sarah Khan", email: "sarah@example.com", password: "123456" },
+  { name: "Michael Smith", email: "michael@example.com", password: "123456" }, // ✅ added
 ];
 
 // --- ADMINS ---

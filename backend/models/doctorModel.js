@@ -6,7 +6,7 @@ const doctorSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
 
-    image: { type: String, default: "" }, // Cloudinary URL (optional)
+    image: { type: String, default: "", required: false }, // Cloudinary URL (optional)
 
     speciality: { type: String, required: true },
     degree: { type: String, required: false }, // optional

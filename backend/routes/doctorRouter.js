@@ -8,14 +8,12 @@ import {
   toggleAvailability,
   getAppointments,
 } from "../controllers/doctorController.js";
-import { doctorSignup } from "../controllers/authController.js"; // ✅ correct import
+//import { doctorSignup } from "../controllers/authController.js"; // ✅ correct import
 import { uploadMiddleware } from "../middlewares/multer.js";
 
 const doctorRouter = express.Router();
 
 // Public route (doctor signup)
-doctorRouter.post("/signup", uploadMiddleware, doctorSignup);
-
 // Protected doctor routes
 doctorRouter.use(authMiddleware, authorizeRoles("doctor"));
 

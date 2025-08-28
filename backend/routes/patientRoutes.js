@@ -8,8 +8,9 @@ import {
   loginPatient,
   getPatientProfile,
   updatePatientProfile,
+  getPatientAppointments,
 } from "../controllers/PatientsController.js";
-
+import { bookAppointment } from "../controllers/PatientsController.js";
 const patRouter = express.Router();
 
 patRouter.post("/signup", registerPatient);
@@ -27,5 +28,16 @@ patRouter.put(
   authorizeRoles("patient"),
   updatePatientProfile
 );
-
+patRouter.get(
+  "/appointments",
+  authMiddleware,
+  authorizeRoles("patient"),
+  getPatientAppointments
+);
+patRouter.post(
+  "/appointments",
+  authMiddleware,
+  authorizeRoles("patient"),
+  bookAppointment
+);
 export default patRouter;
