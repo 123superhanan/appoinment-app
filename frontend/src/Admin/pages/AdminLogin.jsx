@@ -7,7 +7,7 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const { loading, loginAdmin, signupAdmin } = useContext(AdminAuthContext);
 
-  const [isSignup, setIsSignup] = useState(false);
+  const [isSignup, setIsSignup] = useState();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

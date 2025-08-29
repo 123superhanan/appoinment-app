@@ -26,3 +26,6 @@ export const authApi = axios.create({
 export const doctorApi = axios.create({
   baseURL: "http://localhost:4000/api/auth/doctor", //
 });
+export const appointmentApi = axios.create({
+  baseURL: "http://localhost:4000/api/appointments", // Add /api
+});

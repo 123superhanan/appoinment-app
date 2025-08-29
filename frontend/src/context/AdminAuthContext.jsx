@@ -8,20 +8,27 @@ export const AdminAuthContext = createContext();
 export const AdminAuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
   const [adminCount, setAdminCount] = useState(0);
+  const [loading, setLoading] = useState(true); // loading while checking token
 
-  //   // Fetch admin count on component mount
-  //   useEffect(() => {
-  //     fetchAdminCount();
-  //   }, []);
-
-  //   const fetchAdminCount = async () => {
-  //     try {
-  //       const res = await axios.get("/api/admin/count");
-  //       setAdminCount(res.data.count);
-  //     } catch (err) {
-  //       console.error("Failed to fetch admin count:", err);
-  //     }
-  //   };
+  // Load admin from token on mount
+  useEffect(() => {
+    const token = localStorage.getItem("adminToken");
+    if (token) {
+      axios
+        .get("/api/admin/auth/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          setAdmin(res.data.admin);
+        })
+        .catch(() => {
+          localStorage.removeItem("adminToken"); // invalid token
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, []);
 
   // Admin login
   const loginAdmin = async (email, password) => {
@@ -40,21 +47,18 @@ export const AdminAuthProvider = ({ children }) => {
     }
   };
 
-  // Admin signup - update count after successful signup
+  // Admin signup
   const signupAdmin = async (name, email, password) => {
     try {
-      console.log("Attempting signup with:", { name, email });
       const res = await axios.post("/api/admin/auth/signup", {
         name,
         email,
         password,
       });
-      setAdminCount((prev) => prev + 1); // Update count
+      setAdminCount((prev) => prev + 1);
       toast.success(res.data.message || "Admin created successfully!");
       return res.data;
     } catch (err) {
-      console.error("Signup error:", err);
-      console.error("Response:", err.response);
       toast.error(err.response?.data?.message || "Signup failed");
       throw err;
     }
@@ -64,6 +68,7 @@ export const AdminAuthProvider = ({ children }) => {
   const logoutAdmin = () => {
     localStorage.removeItem("adminToken");
     setAdmin(null);
+    toast.info("Logged out successfully");
   };
 
   return (
@@ -74,12 +79,13 @@ export const AdminAuthProvider = ({ children }) => {
         loginAdmin,
         signupAdmin,
         logoutAdmin,
-        //fetchAdminCount,
+        loading,
       }}
     >
       {children}
     </AdminAuthContext.Provider>
   );
 };
+
 export const useAdminAuth = () => React.useContext(AdminAuthContext);
 export default AdminAuthContext;

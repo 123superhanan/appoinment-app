@@ -1,17 +1,25 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { AppContext } from "../../context/AppContext.jsx";
 
 export default function Appointments() {
-  const { appointments, fetchAppointments, addAppointment, deleteAppointment } =
-    useContext(AppContext);
+  const {
+    appointments,
+    fetchAppointments,
+    addAppointmentPatient, // Changed from addAppointment
+    deleteAppointment,
+  } = useContext(AppContext);
   const [q, setQ] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
-    doctor: "",
-    patient: "",
+    doctorId: "", // Changed to match backend expectation
     date: "",
     time: "",
   });
+
+  // Fetch appointments on component mount
+  useEffect(() => {
+    fetchAppointments();
+  }, []);
 
   // Search filter
   const filtered = appointments.filter((a) =>
@@ -19,11 +27,15 @@ export default function Appointments() {
   );
 
   // Handle form submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    addAppointment(formData); // context function
-    setShowModal(false);
-    setFormData({ doctorId: "", patientId: "", date: "", time: "" });
+    try {
+      await addAppointmentPatient(formData); // Use the correct function
+      setShowModal(false);
+      setFormData({ doctorId: "", date: "", time: "" });
+    } catch (error) {
+      console.error("Failed to create appointment:", error);
+    }
   };
 
   return (
@@ -60,9 +72,13 @@ export default function Appointments() {
             {filtered.length > 0 ? (
               filtered.map((a) => (
                 <tr key={a._id} className="border-t">
-                  <td className="px-4 py-3">{a.doctorId?.name}</td>
-                  <td className="px-4 py-3">{a.patientId?.name}</td>
-                  <td className="px-4 py-3">{a.date}</td>
+                  <td className="px-4 py-3">{a.doctorId?.name || a.doctor}</td>
+                  <td className="px-4 py-3">
+                    {a.patientId?.name || a.patient}
+                  </td>
+                  <td className="px-4 py-3">
+                    {new Date(a.date).toLocaleDateString()}
+                  </td>
                   <td className="px-4 py-3">{a.time}</td>
                   <td className="px-4 py-3 text-right">
                     <button
@@ -102,16 +118,6 @@ export default function Appointments() {
                 required
               />
               <input
-                type="text"
-                placeholder="Patient ID"
-                value={formData.patientId}
-                onChange={(e) =>
-                  setFormData({ ...formData, patientId: e.target.value })
-                }
-                className="w-full border px-3 py-2 rounded-lg"
-                required
-              />
-              <input
                 type="date"
                 value={formData.date}
                 onChange={(e) =>
@@ -129,24 +135,6 @@ export default function Appointments() {
                 className="w-full border px-3 py-2 rounded-lg"
                 required
               />
-              <input
-                type="text"
-                placeholder="Doctor"
-                value={formData.doctor}
-                onChange={(e) =>
-                  setFormData({ ...formData, doctor: e.target.value })
-                }
-              />
-
-              <input
-                type="text"
-                placeholder="Patient"
-                value={formData.patient}
-                onChange={(e) =>
-                  setFormData({ ...formData, patient: e.target.value })
-                }
-              />
-
               <div className="flex justify-end gap-2 pt-4">
                 <button
                   type="button"

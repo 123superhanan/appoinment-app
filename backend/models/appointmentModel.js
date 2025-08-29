@@ -2,19 +2,23 @@ import mongoose from "mongoose";
 
 const appointmentSchema = new mongoose.Schema(
   {
-    patient: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // ✅ match userModel
-      required: true,
-    },
     doctor: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Doctor", // ✅ matches doctorModel
+      ref: "Doctor",
+      required: true,
+    },
+    patient: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     date: { type: Date, required: true },
     time: { type: String, required: true },
-    status: { type: String, default: "pending" },
+    status: {
+      type: String,
+      enum: ["pending", "paid", "cancelled"],
+      default: "pending",
+    },
   },
   { timestamps: true }
 );

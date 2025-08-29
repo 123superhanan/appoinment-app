@@ -19,6 +19,6 @@ doctorRouter.use(authMiddleware, authorizeRoles("doctor"));
 
 doctorRouter.put("/profile", updateProfile);
 doctorRouter.patch("/availability", toggleAvailability);
-doctorRouter.get("/appointments", getAppointments);
+// doctorRouter.get("/appointments", getAppointments);
 
 export default doctorRouter;

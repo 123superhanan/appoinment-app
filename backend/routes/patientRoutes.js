@@ -28,16 +28,16 @@ patRouter.put(
   authorizeRoles("patient"),
   updatePatientProfile
 );
-patRouter.get(
-  "/appointments",
-  authMiddleware,
-  authorizeRoles("patient"),
-  getPatientAppointments
-);
-patRouter.post(
-  "/appointments",
-  authMiddleware,
-  authorizeRoles("patient"),
-  bookAppointment
-);
+// patRouter.get(
+//   "/appointments",
+//   authMiddleware,
+//   authorizeRoles("patient"),
+//   getPatientAppointments
+// );
+// patRouter.post(
+//   "/appointments",
+//   authMiddleware,
+//   authorizeRoles("patient"),
+//   bookAppointment
+// );
 export default patRouter;

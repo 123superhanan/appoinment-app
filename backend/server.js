@@ -8,6 +8,8 @@ import doctorRouter from "./routes/doctorRouter.js";
 import authRouter from "./routes/authRoutes.js";
 import adminAuthRouter from "./routes/adminAuthRoutes.js";
 import patRouter from "./routes/patientRoutes.js";
+import appointmentRoutes from "./routes/appointmentRoutes.js";
+
 //app config
 const app = express();
 const port = process.env.PORT || 4000;
@@ -23,7 +25,7 @@ app.use("/api/admin", adminRouter); // protected admin routes - WITH AUTH MIDDLE
 app.use("/api/doctor", doctorRouter);
 app.use("/api/auth", authRouter); // regular user auth routes
 app.use("/api/patients", patRouter); // patient routes
-
+app.use("/api/appointments", appointmentRoutes);
 app.get("/", (req, res) => {
   res.status(200).send("Welcome to the Prescripto backend server");
 });

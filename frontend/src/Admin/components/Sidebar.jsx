@@ -19,12 +19,12 @@ const Sidebar = () => {
         >
           <Calendar size={18} /> Appointments
         </Link>
-        <Link
+        {/* <Link
           to="/admin/add-doctor"
           className="flex items-center gap-2 hover:text-blue-600"
         >
           <UserPlus size={18} /> Add Doctor
-        </Link>
+        </Link> */}
         <Link
           to="/admin/doctors"
           className="flex items-center gap-2 hover:text-blue-600"

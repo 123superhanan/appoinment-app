@@ -56,7 +56,7 @@ adminRouter.delete(
   hardDeletePatient
 );
 
-// Appointment routes
+//Appointment routes
 adminRouter.get("/appointments", getAppointments);
 adminRouter.post("/appointments", createAppointment);
 adminRouter.delete("/appointments/:id", deleteAppointment);

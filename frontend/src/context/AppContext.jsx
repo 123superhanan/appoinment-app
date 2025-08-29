@@ -6,7 +6,7 @@ import { adminApi } from "../utils/axios";
 import { userApi } from "../utils/axios";
 import { toast } from "react-toastify";
 import { doctorApi } from "../utils/axios";
-
+import { appointmentApi } from "../utils/axios";
 // Automatically attach admin token
 adminApi.interceptors.request.use((config) => {
   const token = localStorage.getItem("adminToken");
@@ -111,20 +111,32 @@ const AppContextProvider = ({ children }) => {
       setPatients([]);
     }
   };
+
+  // ===============================
+  // Appointments API Functions
+  // ===============================
+
   const fetchAppointments = async () => {
     try {
-      const token = localStorage.getItem("token"); // patient JWT
+      const token = localStorage.getItem("token");
       if (!token) throw new Error("No auth token found");
 
-      const { data } = await userApi.get("/appointments", {
+      const { data } = await appointmentApi.get("/", {
         headers: { Authorization: `Bearer ${token}` },
+        params: { t: Date.now() }, // prevent caching
       });
 
-      // data.appointments should come from backend
-      setAppointments(data.appointments || []);
+      // Handle both array and object responses
+      const appointments = Array.isArray(data)
+        ? data
+        : data?.appointments || [];
+
+      setAppointments(appointments);
+      return appointments;
     } catch (err) {
       console.error("Error fetching appointments:", err);
       setAppointments([]);
+      return [];
     }
   };
 
@@ -133,13 +145,13 @@ const AppContextProvider = ({ children }) => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No auth token found");
 
-      const { data } = await userApi.post(
-        "/appointments",
+      const { data } = await appointmentApi.post(
+        "/",
         { doctorId, date, time },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // After successful booking, fetch updated appointments
+      // After successful booking, refresh appointments
       await fetchAppointments();
 
       toast.success("Appointment booked successfully ✅");
@@ -155,47 +167,64 @@ const AppContextProvider = ({ children }) => {
 
   const deleteAppointment = async (id) => {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No auth token found");
+
       const user = getCurrentUser();
 
       if (user?.role === "admin") {
-        await adminApi.delete(`/appointments/${id}`);
+        await adminApi.delete(`/appointments/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       } else {
-        await userApi.delete(`/appointments/${id}`);
+        await appointmentApi.delete(`/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       }
 
       setAppointments((prev) => prev.filter((app) => app._id !== id));
+      toast.success("Appointment deleted ✅");
       return { success: true };
     } catch (err) {
       console.error("Error deleting appointment:", err);
+      toast.error("Failed to delete appointment ❌");
       throw err;
     }
   };
-  // Patient books an appointment for themselves
 
   const updateAppointmentStatus = async (id, status) => {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No auth token found");
+
       const user = getCurrentUser();
-      let data;
+      let response;
 
       if (user?.role === "admin") {
-        const response = await adminApi.patch(`/appointments/${id}/status`, {
-          status,
-        });
-        data = response.data;
+        response = await adminApi.patch(
+          `/appointments/${id}/status`,
+          { status },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       } else {
-        const response = await userApi.patch(`/appointments/${id}/status`, {
-          status,
-        });
-        data = response.data;
+        response = await appointmentApi.patch(
+          `/${id}/status`,
+          { status },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
       }
+
+      const data = response.data;
 
       setAppointments((prev) =>
         prev.map((appt) => (appt._id === id ? { ...appt, status } : appt))
       );
 
+      toast.success("Appointment updated ✅");
       return data;
     } catch (err) {
       console.error("Error updating appointment status:", err);
+      toast.error("Failed to update appointment ❌");
       throw err;
     }
   };
@@ -221,6 +250,12 @@ const AppContextProvider = ({ children }) => {
   };
   const selectAppointmentForPayment = (appt) => {
     setSelectedAppointment(appt);
+    // Store in localStorage for persistence
+    if (appt) {
+      localStorage.setItem("selectedAppointment", JSON.stringify(appt));
+    } else {
+      localStorage.removeItem("selectedAppointment");
+    }
   };
   // ================== DOCTOR CRUD (Admin only) ==================
   const addDoctor = async (doctorData) => {
